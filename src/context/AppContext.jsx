@@ -1,0 +1,339 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  initialState,
+  initialTopNotifications,
+  initialAchievements,
+  initialContentPosts,
+  initialOrgProfile
+} from '../data/initialData';
+
+const AppContext = createContext(null);
+
+export function AppProvider({ children }) {
+  // Navigation & UI Layout State
+  const [activeView, setActiveView] = useState('dashboard');
+  const [activeSubAction, setActiveSubAction] = useState(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Global Search
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Top Notifications
+  const [topNotifications, setTopNotifications] = useState(initialTopNotifications);
+  const [activeNotifFilter, setActiveNotifFilter] = useState('all');
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // Selected Entities
+  const [selectedEventId, setSelectedEventId] = useState('ev-1');
+  const [selectedTicketId, setSelectedTicketId] = useState('tkt-1');
+  const [selectedPass, setSelectedPass] = useState(null);
+  const [editingEvent, setEditingEvent] = useState(null);
+
+  // Modals & Popups
+  const [activeModal, setActiveModal] = useState(null);
+  const [modalData, setModalData] = useState(null);
+
+  // Toasts
+  const [toasts, setToasts] = useState([]);
+
+  // Auth State
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+
+  // Main Domain Collections
+  const [events, setEvents] = useState(initialState.events || []);
+  const [registrations, setRegistrations] = useState(initialState.registrations || []);
+  const [campaigns, setCampaigns] = useState(initialState.campaigns || []);
+  const [jobs, setJobs] = useState(initialState.jobs || []);
+  const [applications, setApplications] = useState(initialState.applications || []);
+  const [schemes, setSchemes] = useState(initialState.schemes || []);
+  const [schemeApplications, setSchemeApplications] = useState(initialState.schemeApplications || []);
+  const [tickets, setTickets] = useState(initialState.tickets || []);
+  const [achievements, setAchievements] = useState(initialAchievements);
+  const [contentPosts, setContentPosts] = useState(initialContentPosts);
+  const [orgProfile, setOrgProfile] = useState(initialOrgProfile);
+  const [knowledgeCategories] = useState(initialState.knowledgeCategories || []);
+  const [helpArticles] = useState(initialState.helpArticles || []);
+
+  // Show Toast Helper
+  const showToast = (message, type = 'info') => {
+    const id = `toast-${Date.now()}-${Math.random()}`;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3800);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  // View Navigation with Micro-loader
+  const navigateTo = (viewKey, subAction = null) => {
+    setIsLoading(true);
+    setActiveView(viewKey);
+    setActiveSubAction(subAction);
+    setIsMobileSidebarOpen(false);
+    if (viewKey !== 'createEvent' || subAction !== 'edit-event') {
+      if (subAction !== 'edit-event') {
+        setEditingEvent(null);
+      }
+    }
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 280);
+  };
+
+  const startEditEvent = (eventToEdit) => {
+    const target = eventToEdit || selectedEvent;
+    setEditingEvent(target);
+    if (target && target.id) {
+      setSelectedEventId(target.id);
+    }
+    navigateTo('createEvent', 'edit-event');
+  };
+
+  // Modal Controllers
+  const openModal = (modalName, data = null) => {
+    setActiveModal(modalName);
+    setModalData(data);
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    setModalData(null);
+  };
+
+  // Keyboard shortcut for Escape to close modals and ⌘K for search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (activeModal) closeModal();
+        if (isNotifOpen) setIsNotifOpen(false);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('globalTopSearch');
+        if (searchInput) searchInput.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeModal, isNotifOpen]);
+
+  // Notifications Helpers
+  const markAllNotifsRead = () => {
+    setTopNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    showToast('All notifications marked as read', 'success');
+  };
+
+  const clearAllNotifs = () => {
+    setTopNotifications([]);
+    showToast('Cleared all notifications', 'info');
+  };
+
+  // Event Helpers
+  const selectEvent = (id) => {
+    setSelectedEventId(id);
+    navigateTo('eventDetails');
+  };
+
+  const addEvent = (newEvent) => {
+    const ev = {
+      ...newEvent,
+      id: `ev-${Date.now()}`,
+      poster: newEvent.poster || '/assets/posters/poster-default.svg',
+      registered: 0,
+      status: 'upcoming'
+    };
+    setEvents(prev => [ev, ...prev]);
+    showToast(`Event "${ev.name}" successfully created!`, 'success');
+  };
+
+  const updateEvent = (id, updates) => {
+    setEvents(prev => prev.map(e => (e.id === id ? { ...e, ...updates } : e)));
+    if (id) {
+      setSelectedEventId(id);
+    }
+    setEditingEvent(null);
+    showToast('Event details updated successfully.', 'success');
+  };
+
+  // Opportunity (Job) Helpers
+  const addJob = (newJob) => {
+    const job = {
+      ...newJob,
+      id: `job-${Date.now()}`,
+      poster: newJob.poster || '/assets/hiring/hiring-default.svg',
+      applicantsCount: 0,
+      status: 'active'
+    };
+    setJobs(prev => [job, ...prev]);
+    showToast(`Opportunity "${job.title}" published!`, 'success');
+  };
+
+  // Scheme Helpers
+  const addScheme = (newScheme) => {
+    const scheme = {
+      ...newScheme,
+      id: `sch-${Date.now()}`,
+      applicantsCount: 0,
+      status: 'active'
+    };
+    setSchemes(prev => [scheme, ...prev]);
+    showToast(`Grant scheme "${scheme.title}" launched!`, 'success');
+  };
+
+  // Campaign Helpers
+  const addCampaign = (newCamp) => {
+    const camp = {
+      ...newCamp,
+      id: `camp-${Date.now()}`,
+      status: 'active',
+      spend: '$0',
+      reach: '0',
+      conversions: 0
+    };
+    setCampaigns(prev => [camp, ...prev]);
+    showToast(`Campaign "${camp.name}" launched!`, 'success');
+  };
+
+  // Achievement Helpers
+  const addAchievement = (newAch) => {
+    const ach = {
+      ...newAch,
+      id: `ach-${Date.now()}`
+    };
+    setAchievements(prev => [ach, ...prev]);
+    showToast(`Achievement "${ach.title}" added to showcase!`, 'success');
+  };
+
+  // Content Helpers
+  const addContentPost = (newPost) => {
+    const post = {
+      ...newPost,
+      id: `cnt-${Date.now()}`,
+      author: 'Arthur Taylor',
+      date: 'Today',
+      status: 'Published'
+    };
+    setContentPosts(prev => [post, ...prev]);
+    showToast(`Published "${post.title}" to portal!`, 'success');
+  };
+
+  // Gate Scanner / Attendee Check-In
+  const checkInAttendee = (ticketCode) => {
+    setRegistrations(prev =>
+      prev.map(reg => {
+        if (reg.ticketCode === ticketCode || reg.id === ticketCode) {
+          return { ...reg, status: 'used', validatedAt: 'Just now' };
+        }
+        return reg;
+      })
+    );
+    showToast(`Pass ${ticketCode} verified & gate unlocked!`, 'success');
+  };
+
+  const addRegistration = (newReg) => {
+    setRegistrations(prev => [newReg, ...prev]);
+    showToast(`Pass credential ${newReg.ticketCode || ''} issued for ${newReg.name}!`, 'success');
+  };
+
+  // Ticket Status update
+  const updateTicketStatus = (ticketId, status) => {
+    setTickets(prev =>
+      prev.map(t => (t.id === ticketId ? { ...t, status } : t))
+    );
+    showToast(`Ticket status updated to ${status}.`, 'info');
+  };
+
+  const selectedEvent = events.find(e => e.id === selectedEventId) || events[0];
+  const selectedTicket = tickets.find(t => t.id === selectedTicketId) || tickets[0];
+
+  const value = {
+    // Nav & layout
+    activeView,
+    activeSubAction,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+    isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
+    isLoading,
+    navigateTo,
+    // Search
+    searchQuery,
+    setSearchQuery,
+    // Notifications
+    topNotifications,
+    activeNotifFilter,
+    setActiveNotifFilter,
+    isNotifOpen,
+    setIsNotifOpen,
+    markAllNotifsRead,
+    clearAllNotifs,
+    // Selected
+    selectedEventId,
+    setSelectedEventId,
+    selectedEvent,
+    selectEvent,
+    editingEvent,
+    setEditingEvent,
+    startEditEvent,
+    selectedTicketId,
+    selectedTicket,
+    setSelectedTicketId,
+    selectedPass,
+    setSelectedPass,
+    // Modals
+    activeModal,
+    modalData,
+    openModal,
+    closeModal,
+    // Toasts
+    toasts,
+    showToast,
+    removeToast,
+    // Collections
+    events,
+    setEvents,
+    registrations,
+    campaigns,
+    jobs,
+    applications,
+    schemes,
+    schemeApplications,
+    tickets,
+    achievements,
+    contentPosts,
+    orgProfile,
+    setOrgProfile,
+    knowledgeCategories,
+    helpArticles,
+    // Mutation Handlers
+    addEvent,
+    updateEvent,
+    addJob,
+    addScheme,
+    addCampaign,
+    addAchievement,
+    addContentPost,
+    checkInAttendee,
+    addRegistration,
+    setRegistrations,
+    updateTicketStatus,
+    // Auth
+    isLoggedIn,
+    setIsLoggedIn
+  };
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+}
+
+export function useApp() {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+}
