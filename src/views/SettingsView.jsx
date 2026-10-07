@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { SettingsSectionSkeleton } from '../components/skeletons';
 
 export default function SettingsView() {
   const { showToast } = useApp();
   const [activeSection, setActiveSection] = useState('account');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+
+  const handleSectionChange = (sectionKey) => {
+    if (sectionKey === activeSection) return;
+    setIsTabLoading(true);
+    setActiveSection(sectionKey);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 260);
+  };
 
   // Toggle states
   const [settingsToggles, setSettingsToggles] = useState({
@@ -45,35 +56,35 @@ export default function SettingsView() {
         <div className="settings-nav">
           <button
             className={`settings-nav-item ${activeSection === 'account' ? 'active' : ''}`}
-            onClick={() => setActiveSection('account')}
+            onClick={() => handleSectionChange('account')}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
             <span>Account</span>
           </button>
           <button
             className={`settings-nav-item ${activeSection === 'notifications' ? 'active' : ''}`}
-            onClick={() => setActiveSection('notifications')}
+            onClick={() => handleSectionChange('notifications')}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
             <span>Notifications</span>
           </button>
           <button
             className={`settings-nav-item ${activeSection === 'privacy' ? 'active' : ''}`}
-            onClick={() => setActiveSection('privacy')}
+            onClick={() => handleSectionChange('privacy')}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
             <span>Privacy &amp; Security</span>
           </button>
           <button
             className={`settings-nav-item ${activeSection === 'appearance' ? 'active' : ''}`}
-            onClick={() => setActiveSection('appearance')}
+            onClick={() => handleSectionChange('appearance')}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
             <span>Appearance</span>
           </button>
           <button
             className={`settings-nav-item ${activeSection === 'integrations' ? 'active' : ''}`}
-            onClick={() => setActiveSection('integrations')}
+            onClick={() => handleSectionChange('integrations')}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="7" height="7" /><rect x="15" y="3" width="7" height="7" /><rect x="15" y="14" width="7" height="7" /><rect x="2" y="14" width="7" height="7" /><line x1="9" y1="6.5" x2="15" y2="6.5" /><line x1="18.5" y1="10" x2="18.5" y2="14" /><line x1="9" y1="17.5" x2="15" y2="17.5" /><line x1="5.5" y1="10" x2="5.5" y2="14" /></svg>
             <span>Integrations</span>
@@ -82,8 +93,12 @@ export default function SettingsView() {
 
         {/* Settings Content */}
         <div className="settings-content">
-          {/* Section: Account */}
-          {activeSection === 'account' && (
+          {isTabLoading ? (
+            <SettingsSectionSkeleton rows={4} />
+          ) : (
+            <>
+              {/* Section: Account */}
+              {activeSection === 'account' && (
             <div className="settings-section active" id="settingsSectionAccount">
               <div className="settings-section-head">
                 <h3>Account</h3>
@@ -293,8 +308,10 @@ export default function SettingsView() {
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </>
+      )}
+    </div>
+  </div>
     </section>
   );
 }

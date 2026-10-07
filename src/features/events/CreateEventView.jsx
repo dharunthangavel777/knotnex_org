@@ -11,6 +11,7 @@ import CoverCropScreen from './components/CoverCropScreen';
 import EventEligibilityScreen from './components/EventEligibilityScreen';
 import EventRegistrationFormBuilder from './components/EventRegistrationFormBuilder';
 import BackButton from '../../components/common/BackButton';
+import CreateEventSkeleton from '../../components/skeletons/pages/CreateEventSkeleton';
 
 function parseEventData(ev) {
   if (!ev) {
@@ -144,7 +145,17 @@ export default function CreateEventView({
   const [isAddingSession, setIsAddingSession] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [currentStep, setCurrentStep] = useState('details'); // 'details' | 'eligibility' | 'formBuilder'
+  const [isStepLoading, setIsStepLoading] = useState(false);
   const [draftEventData, setDraftEventData] = useState(() => (editingEvent ? { ...editingEvent, poster: initData.coverImage, sessions: initData.sessions } : null));
+
+  const changeStep = (nextStep) => {
+    setIsStepLoading(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      setCurrentStep(nextStep);
+      setIsStepLoading(false);
+    }, 220);
+  };
   const [coverImage, setCoverImage] = useState(initData.coverImage);
   const [originalCoverImage, setOriginalCoverImage] = useState(initData.originalCoverImage);
   const [showCropScreen, setShowCropScreen] = useState(false);
@@ -313,8 +324,7 @@ export default function CreateEventView({
       if (addToast) addToast('Capacity cannot be negative.', 'error');
       return;
     }
-    setCurrentStep('eligibility');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    changeStep('eligibility');
   };
 
   const handleBack = () => {
@@ -494,10 +504,13 @@ export default function CreateEventView({
       sessions: sessions || editingEvent?.sessions || []
     };
     setDraftEventData(newEv);
-    setCurrentStep('formBuilder');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    changeStep('formBuilder');
     if (addToast) addToast('Event details saved! Configure Registration Form.', 'info');
   };
+
+  if (isStepLoading) {
+    return <CreateEventSkeleton />;
+  }
 
   // Step 3: Registration Form Builder
   if (currentStep === 'formBuilder' && draftEventData) {
@@ -557,7 +570,7 @@ export default function CreateEventView({
             if (addToast) addToast('Draft saved!', 'success');
           }
         }}
-        onBackToDetails={() => setCurrentStep('eligibility')}
+        onBackToDetails={() => changeStep('eligibility')}
         addToast={addToast}
       />
     );
@@ -579,7 +592,7 @@ export default function CreateEventView({
         initialVolunteerOpenings={draftEventData?.volunteerOpenings}
         initialContact={draftEventData?.contact}
         initialFaqs={draftEventData?.faqs}
-        onBack={() => setCurrentStep('details')}
+        onBack={() => changeStep('details')}
         onNext={handleProceedToFormBuilder}
         onSaveDraft={handleSaveEligibilityDraft}
         addToast={addToast}

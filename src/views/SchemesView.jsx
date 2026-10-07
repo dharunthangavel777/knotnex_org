@@ -1,12 +1,35 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getUserAvatar } from '../data/initialData';
+import { SchemesListSkeleton, SchemeApplicationsSkeleton } from '../components/skeletons';
+import SearchBar from '../components/common/SearchBar';
 
 export default function SchemesView() {
   const { schemes, schemeApplications, activeSubAction, navigateTo, showToast } = useApp();
 
   const [activeTab, setActiveTab] = useState(activeSubAction === 'manage-schemes' ? 'applications' : 'schemes');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setIsTabLoading(true);
+    setTimeout(() => {
+      setIsTabLoading(false);
+      setIsRefreshing(false);
+      showToast('Grant schemes database synced successfully!', 'success');
+    }, 400);
+  };
+
+  const handleTabChange = (newTab) => {
+    if (newTab === activeTab) return;
+    setIsTabLoading(true);
+    setActiveTab(newTab);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 280);
+  };
 
   const filteredSchemes = schemes.filter(s => {
     if (searchTerm) {
@@ -146,7 +169,7 @@ export default function SchemesView() {
             <button
               className={`sheets-filter-pill-btn ${activeTab === 'schemes' ? 'active' : ''}`}
               id="tabSchemesList"
-              onClick={() => setActiveTab('schemes')}
+              onClick={() => handleTabChange('schemes')}
               style={{ padding: '6px 14px', fontSize: '13px' }}
             >
               Active Schemes ({schemes.length})
@@ -154,7 +177,7 @@ export default function SchemesView() {
             <button
               className={`sheets-filter-pill-btn ${activeTab === 'applications' ? 'active' : ''}`}
               id="tabSchemesApplications"
-              onClick={() => setActiveTab('applications')}
+              onClick={() => handleTabChange('applications')}
               style={{ padding: '6px 14px', fontSize: '13px' }}
             >
               Applications ({schemeApplications.length})
@@ -162,44 +185,48 @@ export default function SchemesView() {
           </div>
 
           <div className="sheets-console-actions">
-            <div className="sheets-search-wrapper">
-              <svg className="sheets-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                className="sheets-search-input-field"
-                placeholder="Search schemes, grants, tags..."
-                id="schemesSearchInput"
-                autoComplete="off"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="search-clear-btn"
-                  style={{ display: 'inline-flex' }}
-                  onClick={() => setSearchTerm('')}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
+            <SearchBar
+              id="schemesSearchInput"
+              placeholder="Search schemes, grants, tags..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              width="360px"
+            />
             <button
               className="circle-action-btn"
+              id="btnRefreshSchemesList"
               title="Refresh schemes list"
-              onClick={() => showToast('Schemes grant pool synced with treasury!', 'success')}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{
+                  animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
               </svg>
             </button>
           </div>
         </div>
 
-        {/* Tab 1: Schemes List */}
-        {activeTab === 'schemes' && (
+        {isTabLoading ? (
+          <div style={{ padding: '20px' }}>
+            {activeTab === 'schemes' ? <SchemesListSkeleton count={4} /> : <SchemeApplicationsSkeleton rows={5} />}
+          </div>
+        ) : (
+          <>
+            {/* Tab 1: Schemes List */}
+            {activeTab === 'schemes' && (
           <div style={{ overflowX: 'auto' }}>
             <table className="recent-products-table">
               <colgroup>
@@ -356,7 +383,9 @@ export default function SchemesView() {
             </table>
           </div>
         )}
-      </div>
-    </section>
+      </>
+    )}
+  </div>
+</section>
   );
 }

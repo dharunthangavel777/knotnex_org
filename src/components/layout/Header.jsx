@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import SearchBar from '../common/SearchBar';
 
 export default function Header() {
   const {
@@ -59,33 +60,15 @@ export default function Header() {
         </svg>
       </button>
 
-      {/* Center: Pill Search Bar matching screenshot */}
+      {/* Center: Reusable Search Bar */}
       <div className="appbar-center-search">
-        <div className="appbar-search-pill">
-          <svg className="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            type="text"
-            className="search-input-field"
-            placeholder="Search events, jobs, schemes..."
-            id="globalTopSearch"
-            autoComplete="off"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              className="search-clear-cross"
-              aria-label="Clear search"
-              onClick={() => setSearchQuery('')}
-            >
-              &times;
-            </button>
-          )}
-        </div>
+        <SearchBar
+          id="globalTopSearch"
+          placeholder="Search events, jobs, schemes..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          width="420px"
+        />
       </div>
 
       {/* Right: Actions Cluster matching screenshot */}

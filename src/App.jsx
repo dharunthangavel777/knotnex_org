@@ -4,10 +4,10 @@ import { AppProvider, useApp } from './context/AppContext';
 // Layout & Common Components
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
-import GlobalLoadingBar from './components/common/GlobalLoadingBar';
 import ToastContainer from './components/common/ToastContainer';
 import LoginModal from './components/common/LoginModal';
 import ModalManager from './components/modals/ModalManager';
+import { ViewSkeleton, SidebarSkeleton, HeaderSkeleton } from './components/skeletons';
 
 // Views
 import DashboardView from './views/DashboardView';
@@ -18,6 +18,7 @@ import EventPassesView from './views/EventPassesView';
 import CampaignsView from './views/CampaignsView';
 import CareersView from './views/CareersView';
 import CreateOpportunityView from './views/CreateOpportunityView';
+import CareerDetailsView from './views/CareerDetailsView';
 import SchemesView from './views/SchemesView';
 import CreateSchemeView from './views/CreateSchemeView';
 import AchievementsView from './views/AchievementsView';
@@ -28,7 +29,7 @@ import HelpCenterView from './views/HelpCenterView';
 import SettingsView from './views/SettingsView';
 
 function AppContent() {
-  const { activeView, isSidebarCollapsed } = useApp();
+  const { activeView, isSidebarCollapsed, isLoading, isInitialLoading } = useApp();
 
   const renderActiveView = () => {
     switch (activeView) {
@@ -46,6 +47,8 @@ function AppContent() {
         return <CampaignsView />;
       case 'careers':
         return <CareersView />;
+      case 'careerDetails':
+        return <CareerDetailsView />;
       case 'createOpportunity':
         return <CreateOpportunityView />;
       case 'schemes':
@@ -72,12 +75,11 @@ function AppContent() {
   return (
     <div className="desktop-viewport">
       <div className={`desktop-app-frame ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`} id="appFrame">
-        <Sidebar />
+        {isInitialLoading ? <SidebarSkeleton /> : <Sidebar />}
         <main className="main-content" id="mainContentArea">
-          <GlobalLoadingBar />
-          <Header />
-          <div className="content-fade-in" key={activeView}>
-            {renderActiveView()}
+          {isInitialLoading ? <HeaderSkeleton /> : <Header />}
+          <div className="content-fade-in" key={activeView + (isLoading ? '-loading' : '-loaded')}>
+            {isLoading ? <ViewSkeleton viewKey={activeView} /> : renderActiveView()}
           </div>
         </main>
       </div>

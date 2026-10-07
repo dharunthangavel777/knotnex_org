@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { ContentGridSkeleton } from '../components/skeletons';
 
 export default function OrgContentView() {
   const { contentPosts, openModal, showToast } = useApp();
   const [activeTab, setActiveTab] = useState('all');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+
+  const handleTabChange = (newTab) => {
+    if (newTab === activeTab) return;
+    setIsTabLoading(true);
+    setActiveTab(newTab);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 260);
+  };
 
   const filtered = contentPosts.filter(c => {
     if (activeTab === 'all') return true;
@@ -46,37 +57,42 @@ export default function OrgContentView() {
       <div className="segmented-tabs-wrapper">
         <button
           className={`segmented-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveTab('all')}
+          onClick={() => handleTabChange('all')}
         >
           All Content ({contentPosts.length})
         </button>
         <button
           className={`segmented-tab-btn ${activeTab === 'posts' ? 'active' : ''}`}
           id="tabContentPosts"
-          onClick={() => setActiveTab('posts')}
+          onClick={() => handleTabChange('posts')}
         >
           Articles ({contentPosts.filter(c => c.type === 'Article').length})
         </button>
         <button
           className={`segmented-tab-btn ${activeTab === 'media' ? 'active' : ''}`}
           id="tabContentMedia"
-          onClick={() => setActiveTab('media')}
+          onClick={() => handleTabChange('media')}
         >
           Media Assets ({contentPosts.filter(c => c.type === 'Media').length})
         </button>
         <button
           className={`segmented-tab-btn ${activeTab === 'announce' ? 'active' : ''}`}
           id="tabContentAnnounce"
-          onClick={() => setActiveTab('announce')}
+          onClick={() => handleTabChange('announce')}
         >
           Announcements ({contentPosts.filter(c => c.type === 'Announcement').length})
         </button>
       </div>
 
-      <div className="table-container" id="contentPostsContainer">
-        <div className="table-scroll">
-          <table className="data-table">
-            <thead>
+      {isTabLoading ? (
+        <div style={{ padding: '16px 0' }}>
+          <ContentGridSkeleton count={4} />
+        </div>
+      ) : (
+        <div className="table-container" id="contentPostsContainer">
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
               <tr>
                 <th>Title &amp; Summary</th>
                 <th>Category</th>
@@ -116,6 +132,7 @@ export default function OrgContentView() {
           </table>
         </div>
       </div>
+    )}
     </section>
   );
 }

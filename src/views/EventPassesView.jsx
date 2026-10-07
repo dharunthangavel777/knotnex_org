@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getUserAvatar } from '../data/initialData';
+import { PassesTableSkeleton } from '../components/skeletons';
+import SearchBar from '../components/common/SearchBar';
+import { downloadCSV } from '../utils/csvExport';
 
 export default function EventPassesView() {
   const {
@@ -13,6 +16,32 @@ export default function EventPassesView() {
 
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+
+  const handleExportCSV = () => {
+    const headers = ['#', 'Pass ID', 'Attendee Name', 'Email', 'Event Name', 'Ticket Tier', 'Status', 'Issued Date'];
+    const rows = filtered.map((r, idx) => [
+      String(idx + 1).padStart(2, '0'),
+      r.id || `PASS-${idx + 1001}`,
+      r.name || r.attendeeName || 'Attendee',
+      r.email || 'N/A',
+      r.eventName || r.event || 'Knotnex Event',
+      r.tier || r.type || 'Standard Entry',
+      r.status === 'used' ? 'Checked-In' : r.status === 'valid' ? 'Valid / Pending' : 'Expired',
+      r.date || r.issuedAt || 'Recent'
+    ]);
+    downloadCSV('knotnex_event_passes_roster.csv', headers, rows);
+    showToast('Downloaded knotnex_event_passes_roster.csv', 'success');
+  };
+
+  const handleFilterChange = (newFilter) => {
+    if (newFilter === filter) return;
+    setIsTabLoading(true);
+    setFilter(newFilter);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 260);
+  };
 
   const totalIssued = registrations.length;
   const checkedIn = registrations.filter(r => r.status === 'used').length;
@@ -53,7 +82,7 @@ export default function EventPassesView() {
           <button
             className="btn-secondary"
             id="btnExportEventPassesCsv"
-            onClick={() => showToast('Exporting attendee passes roster as CSV...', 'info')}
+            onClick={handleExportCSV}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -172,48 +201,35 @@ export default function EventPassesView() {
           </div>
 
           <div className="sheets-status-filter-pills">
-            <button className={`sheets-filter-pill-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+            <button className={`sheets-filter-pill-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => handleFilterChange('all')}>
               All Passes ({registrations.length})
             </button>
-            <button className={`sheets-filter-pill-btn ${filter === 'valid' ? 'active' : ''}`} onClick={() => setFilter('valid')}>
+            <button className={`sheets-filter-pill-btn ${filter === 'valid' ? 'active' : ''}`} onClick={() => handleFilterChange('valid')}>
               Valid ({pending})
             </button>
-            <button className={`sheets-filter-pill-btn ${filter === 'used' ? 'active' : ''}`} onClick={() => setFilter('used')}>
+            <button className={`sheets-filter-pill-btn ${filter === 'used' ? 'active' : ''}`} onClick={() => handleFilterChange('used')}>
               Checked-in ({checkedIn})
             </button>
-            <button className={`sheets-filter-pill-btn ${filter === 'expired' ? 'active' : ''}`} onClick={() => setFilter('expired')}>
+            <button className={`sheets-filter-pill-btn ${filter === 'expired' ? 'active' : ''}`} onClick={() => handleFilterChange('expired')}>
               Expired ({expired})
             </button>
           </div>
 
           <div className="sheets-console-actions">
-            <div className="sheets-search-wrapper">
-              <svg className="sheets-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                className="sheets-search-input-field"
-                placeholder="Search pass ID, attendee, email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="search-clear-btn"
-                  style={{ display: 'inline-flex' }}
-                  onClick={() => setSearchTerm('')}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
+            <SearchBar
+              placeholder="Search pass ID, attendee, email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              width="360px"
+            />
           </div>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
-          <table className="recent-products-table">
+          {isTabLoading ? (
+            <PassesTableSkeleton rows={6} />
+          ) : (
+            <table className="recent-products-table">
             <colgroup>
               <col style={{ width: '48px' }} />
               <col style={{ width: '22%' }} />
@@ -231,7 +247,7 @@ export default function EventPassesView() {
                 <th>Event</th>
                 <th>Tier</th>
                 <th>Status</th>
-                <th style={{ textAlign: 'right', paddingRight: '16px' }}>Actions</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -284,8 +300,8 @@ export default function EventPassesView() {
                       {r.status === 'used' ? '● Checked-in' : (r.status === 'valid' ? '● Active Pass' : '● Expired')}
                     </span>
                   </td>
-                  <td style={{ textAlign: 'right', paddingRight: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '6px' }}>
                       <button
                         className="btn-secondary"
                         style={{ height: '30px', padding: '0 8px', fontSize: '12px' }}
@@ -309,8 +325,9 @@ export default function EventPassesView() {
               ))}
             </tbody>
           </table>
-        </div>
+        )}
       </div>
+    </div>
     </section>
   );
 }

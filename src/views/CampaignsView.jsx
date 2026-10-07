@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { CampaignCardsSkeleton } from '../components/skeletons';
+import SearchBar from '../components/common/SearchBar';
 
 export default function CampaignsView() {
   const { campaigns, openModal, showToast } = useApp();
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+
+  const handleFilterChange = (newFilter) => {
+    if (newFilter === filter) return;
+    setIsTabLoading(true);
+    setFilter(newFilter);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 260);
+  };
 
   const filtered = campaigns.filter(c => {
     if (filter !== 'all' && c.status !== filter) return false;
@@ -47,60 +59,43 @@ export default function CampaignsView() {
         <div className="filter-left-controls">
           <button
             className={`filter-chip-btn ${filter === 'all' ? 'active-dropdown' : ''}`}
-            onClick={() => setFilter('all')}
+            onClick={() => handleFilterChange('all')}
           >
             All Campaigns ({campaigns.length})
           </button>
           <button
             className={`filter-chip-btn ${filter === 'active' ? 'active-dropdown' : ''}`}
-            onClick={() => setFilter('active')}
+            onClick={() => handleFilterChange('active')}
           >
             Active ({campaigns.filter(c => c.status === 'active').length})
           </button>
           <button
             className={`filter-chip-btn ${filter === 'completed' ? 'active-dropdown' : ''}`}
-            onClick={() => setFilter('completed')}
+            onClick={() => handleFilterChange('completed')}
           >
             Completed ({campaigns.filter(c => c.status === 'completed').length})
           </button>
         </div>
         <div className="filter-right-controls">
-          <div className="search-input-wrapper">
-            <span className="search-input-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </span>
-            <input
-              type="text"
-              className="search-input"
-              id="campaignsSearchInput"
-              placeholder="Search campaigns..."
-              autoComplete="off"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                className="search-clear-btn"
-                style={{ display: 'inline-flex' }}
-                onClick={() => setSearchTerm('')}
-              >
-                &times;
-              </button>
-            )}
-          </div>
+          <SearchBar
+            id="campaignsSearchInput"
+            placeholder="Search campaigns..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            width="320px"
+          />
         </div>
       </div>
 
-      <div className="content-grid-3" id="campaignsCardGrid">
-        {filtered.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--neutral-500)' }}>
-            No campaigns found matching your criteria.
-          </div>
-        ) : (
+      {isTabLoading ? (
+        <CampaignCardsSkeleton count={6} />
+      ) : (
+        <div className="content-grid-3" id="campaignsCardGrid">
+          {filtered.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--neutral-500)' }}>
+              No campaigns found matching your criteria.
+            </div>
+          ) : (
           filtered.map(c => {
             const raised = c.raised || 0;
             const goal = c.goal || 10000;
@@ -172,6 +167,7 @@ export default function CampaignsView() {
           })
         )}
       </div>
+    )}
     </section>
   );
 }

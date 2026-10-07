@@ -15,7 +15,17 @@ export function AppProvider({ children }) {
   const [activeSubAction, setActiveSubAction] = useState(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Initial mount micro-loader (for whole page + sidebar on refresh/first load)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+      setIsLoading(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Global Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,9 +37,11 @@ export function AppProvider({ children }) {
 
   // Selected Entities
   const [selectedEventId, setSelectedEventId] = useState('ev-1');
+  const [selectedJobId, setSelectedJobId] = useState('job-1');
   const [selectedTicketId, setSelectedTicketId] = useState('tkt-1');
   const [selectedPass, setSelectedPass] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [editingJob, setEditingJob] = useState(null);
 
   // Modals & Popups
   const [activeModal, setActiveModal] = useState(null);
@@ -80,9 +92,14 @@ export function AppProvider({ children }) {
         setEditingEvent(null);
       }
     }
+    if (viewKey !== 'createOpportunity' || subAction !== 'edit-job') {
+      if (subAction !== 'edit-job') {
+        setEditingJob(null);
+      }
+    }
     setTimeout(() => {
       setIsLoading(false);
-    }, 280);
+    }, 380);
   };
 
   const startEditEvent = (eventToEdit) => {
@@ -161,6 +178,20 @@ export function AppProvider({ children }) {
   };
 
   // Opportunity (Job) Helpers
+  const selectJob = (id) => {
+    setSelectedJobId(id);
+    navigateTo('careerDetails');
+  };
+
+  const startEditJob = (jobToEdit) => {
+    const target = jobToEdit || selectedJob;
+    setEditingJob(target);
+    if (target && target.id) {
+      setSelectedJobId(target.id);
+    }
+    navigateTo('createOpportunity', 'edit-job');
+  };
+
   const addJob = (newJob) => {
     const job = {
       ...newJob,
@@ -249,6 +280,7 @@ export function AppProvider({ children }) {
   };
 
   const selectedEvent = events.find(e => e.id === selectedEventId) || events[0];
+  const selectedJob = jobs.find(j => j.id === selectedJobId) || jobs[0];
   const selectedTicket = tickets.find(t => t.id === selectedTicketId) || tickets[0];
 
   const value = {
@@ -260,6 +292,7 @@ export function AppProvider({ children }) {
     isMobileSidebarOpen,
     setIsMobileSidebarOpen,
     isLoading,
+    isInitialLoading,
     navigateTo,
     // Search
     searchQuery,
@@ -280,6 +313,13 @@ export function AppProvider({ children }) {
     editingEvent,
     setEditingEvent,
     startEditEvent,
+    selectedJobId,
+    setSelectedJobId,
+    selectedJob,
+    selectJob,
+    editingJob,
+    setEditingJob,
+    startEditJob,
     selectedTicketId,
     selectedTicket,
     setSelectedTicketId,

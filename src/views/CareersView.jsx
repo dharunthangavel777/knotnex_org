@@ -1,13 +1,70 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getJobPoster, getUserAvatar } from '../data/initialData';
+import { JobCardsSkeleton, ApplicationsTableSkeleton } from '../components/skeletons';
+import SearchBar from '../components/common/SearchBar';
+import { downloadCSV } from '../utils/csvExport';
+import { downloadCandidateResume } from '../utils/resumeDownload';
 
 export default function CareersView() {
-  const { jobs, applications, activeSubAction, navigateTo, showToast } = useApp();
+  const { jobs, applications, activeSubAction, navigateTo, showToast, selectJob } = useApp();
 
   const [activeTab, setActiveTab] = useState(activeSubAction === 'applications' ? 'applications' : 'jobs');
   const [searchTerm, setSearchTerm] = useState('');
   const [jobFilter, setJobFilter] = useState('all');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setIsTabLoading(true);
+    setTimeout(() => {
+      setIsTabLoading(false);
+      setIsRefreshing(false);
+      showToast('Careers database refreshed successfully!', 'success');
+    }, 400);
+  };
+
+  const handleTabChange = (newTab) => {
+    if (newTab === activeTab) return;
+    setIsTabLoading(true);
+    setActiveTab(newTab);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 280);
+  };
+
+  const handleExportCSV = () => {
+    if (activeTab === 'jobs') {
+      const headers = ['#', 'Position Title', 'Department', 'Location', 'Employment Type', 'Compensation', 'Applicants', 'Status'];
+      const rows = filteredJobs.map((j, idx) => [
+        String(idx + 1).padStart(2, '0'),
+        j.title || 'Untitled Role',
+        j.dept || 'General',
+        j.location || 'Remote',
+        j.type || 'Full-time',
+        j.salary || 'Competitive',
+        j.applicantsCount ?? 0,
+        (j.status || 'Active').toUpperCase()
+      ]);
+      downloadCSV('knotnex_job_opportunities.csv', headers, rows);
+      showToast('Downloaded knotnex_job_opportunities.csv', 'success');
+    } else {
+      const headers = ['#', 'Candidate Name', 'Role Applied', 'Email', 'Experience', 'Stage', 'Rating', 'Applied Date'];
+      const rows = filteredApps.map((a, idx) => [
+        String(idx + 1).padStart(2, '0'),
+        a.candidate || a.name || 'Candidate',
+        a.role || a.jobTitle || 'Role',
+        a.email || 'N/A',
+        a.exp || 'N/A',
+        a.stage || a.status || 'Screening',
+        a.rating ? `${a.rating}/5` : 'N/A',
+        a.date || a.appliedAt || 'Recent'
+      ]);
+      downloadCSV('knotnex_job_applications.csv', headers, rows);
+      showToast('Downloaded knotnex_job_applications.csv', 'success');
+    }
+  };
 
   const activeJobsCount = jobs.filter(j => j.status === 'active').length;
   const totalAppsCount = applications.length;
@@ -155,73 +212,97 @@ export default function CareersView() {
       <div className="sheets-console-card full-screen-width">
         <div className="sheets-console-top-bar">
           <div className="sheets-count-cluster">
+            <span className="sheets-count-number">
+              {activeTab === 'jobs' ? jobs.length : applications.length}
+            </span>
+            <span className="sheets-count-label">
+              {activeTab === 'jobs' ? 'Job Opportunities' : 'Applications'}
+            </span>
+          </div>
+
+          <div className="sheets-status-filter-pills">
             <button
               className={`sheets-filter-pill-btn ${activeTab === 'jobs' ? 'active' : ''}`}
               id="tabCareersJobs"
-              onClick={() => setActiveTab('jobs')}
-              style={{ padding: '6px 14px', fontSize: '13px' }}
+              onClick={() => handleTabChange('jobs')}
             >
-              Open Roles ({jobs.length})
+              Job Opportunities ({jobs.length})
             </button>
             <button
               className={`sheets-filter-pill-btn ${activeTab === 'applications' ? 'active' : ''}`}
               id="tabCareersApplications"
-              onClick={() => setActiveTab('applications')}
-              style={{ padding: '6px 14px', fontSize: '13px' }}
+              onClick={() => handleTabChange('applications')}
             >
               Applications ({applications.length})
             </button>
           </div>
 
           <div className="sheets-console-actions">
-            <div className="sheets-search-wrapper">
-              <svg className="sheets-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                className="sheets-search-input-field"
-                placeholder={activeTab === 'jobs' ? "Search roles, dept, location..." : "Search candidates, roles..."}
-                id="careersSearchInput"
-                autoComplete="off"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="search-clear-btn"
-                  style={{ display: 'inline-flex' }}
-                  onClick={() => setSearchTerm('')}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
+            <SearchBar
+              id="careersSearchInput"
+              placeholder={activeTab === 'jobs' ? "Search roles, departments, categories..." : "Search candidates, roles..."}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              width="360px"
+            />
             <button
               className="circle-action-btn"
+              id="btnRefreshCareersTable"
               title="Refresh careers stream"
-              onClick={() => showToast('Careers database refreshed!', 'success')}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{
+                  animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
               </svg>
+            </button>
+            <button
+              className="btn-secondary"
+              id="btnExportCareersCsv"
+              title="Export CSV"
+              onClick={handleExportCSV}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              <span>CSV</span>
             </button>
           </div>
         </div>
 
-        {/* Tab 1: Open Roles */}
-        {activeTab === 'jobs' && (
+        {isTabLoading ? (
+          <div style={{ padding: '20px' }}>
+            {activeTab === 'jobs' ? <JobCardsSkeleton count={4} /> : <ApplicationsTableSkeleton rows={5} />}
+          </div>
+        ) : (
+          <>
+            {/* Tab 1: Open Roles */}
+            {activeTab === 'jobs' && (
           <div style={{ overflowX: 'auto' }}>
             <table className="recent-products-table">
               <colgroup>
                 <col style={{ width: '48px' }} />
-                <col style={{ width: '32%' }} />
+                <col style={{ width: '30%' }} />
                 <col style={{ width: '16%' }} />
                 <col style={{ width: '18%' }} />
                 <col style={{ width: '12%' }} />
                 <col style={{ width: '12%' }} />
-                <col style={{ width: '10%' }} />
+                <col style={{ width: '12%' }} />
               </colgroup>
               <thead>
                 <tr>
@@ -231,12 +312,16 @@ export default function CareersView() {
                   <th>Location &amp; Type</th>
                   <th>Applicants</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right', paddingRight: '16px' }}>Action</th>
+                  <th style={{ textAlign: 'right', paddingRight: '44px' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredJobs.map((j, idx) => (
-                  <tr key={j.id || idx}>
+                  <tr
+                    key={j.id || idx}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => selectJob(j.id)}
+                  >
                     <td className="col-center" style={{ color: 'var(--neutral-400)', fontWeight: 600, fontSize: '12px' }}>
                       {(idx + 1).toString().padStart(2, '0')}
                     </td>
@@ -282,13 +367,13 @@ export default function CareersView() {
                         ● {j.status}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'right', paddingRight: '16px' }}>
+                    <td style={{ textAlign: 'right', paddingRight: '44px' }}>
                       <button
                         className="btn-secondary"
-                        style={{ height: '30px', padding: '0 10px', fontSize: '12px' }}
-                        onClick={() => {
-                          setActiveTab('applications');
-                          showToast(`Viewing applications for ${j.title}`);
+                        style={{ height: '30px', padding: '0 12px', fontSize: '12px' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          selectJob(j.id);
                         }}
                       >
                         View
@@ -307,11 +392,11 @@ export default function CareersView() {
             <table className="recent-products-table">
               <colgroup>
                 <col style={{ width: '48px' }} />
-                <col style={{ width: '25%' }} />
-                <col style={{ width: '25%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '20%' }} />
+                <col style={{ width: '27%' }} />
+                <col style={{ width: '27%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '14%' }} />
               </colgroup>
               <thead>
                 <tr>
@@ -320,7 +405,7 @@ export default function CareersView() {
                   <th>Applied Position</th>
                   <th>Date Applied</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right', paddingRight: '16px' }}>Resume &amp; Actions</th>
+                  <th style={{ textAlign: 'right', paddingRight: '44px' }}>Resume</th>
                 </tr>
               </thead>
               <tbody>
@@ -366,21 +451,31 @@ export default function CareersView() {
                         ● {a.status || 'Under Review'}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'right', paddingRight: '16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                    <td style={{ textAlign: 'right', paddingRight: '44px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                         <button
                           className="btn-secondary"
-                          style={{ height: '30px', padding: '0 8px', fontSize: '12px' }}
-                          onClick={() => showToast(`Opening resume dossier for ${a.candidate || a.name}`, 'info')}
+                          style={{
+                            height: '30px',
+                            padding: '0 12px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}
+                          onClick={() => {
+                            const filename = downloadCandidateResume(a);
+                            showToast(`Downloaded resume: ${filename}`, 'success');
+                          }}
+                          title={`Download ${a.candidate || a.name}'s resume`}
                         >
-                          Resume
-                        </button>
-                        <button
-                          className="btn-primary"
-                          style={{ height: '30px', padding: '0 8px', fontSize: '12px' }}
-                          onClick={() => showToast(`Candidate ${a.candidate || a.name} moved to Interview!`, 'success')}
-                        >
-                          Shortlist
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                          <span>Resume</span>
                         </button>
                       </div>
                     </td>
@@ -390,7 +485,9 @@ export default function CareersView() {
             </table>
           </div>
         )}
-      </div>
-    </section>
+      </>
+    )}
+  </div>
+</section>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 
 export default function ModalManager() {
@@ -14,8 +14,13 @@ export default function ModalManager() {
     checkInAttendee,
     addRegistration,
     updateTicketStatus,
+    setIsSidebarCollapsed,
     showToast
   } = useApp();
+
+  const [copiedTxnModal, setCopiedTxnModal] = useState(false);
+
+
 
   // Local state for modals
   // 1. Campaign modal
@@ -456,71 +461,360 @@ export default function ModalManager() {
       )}
 
       {/* 8. modalViewTicketPass */}
-      {activeModal === 'modalViewTicketPass' && (
-        <div className="modal-backdrop open" style={{ display: 'flex' }} onClick={handleBackdropClick}>
-          <div className="modal-dialog" style={{ maxWidth: '420px', width: '90%', padding: '0', overflow: 'hidden', borderRadius: '20px' }}>
-            <div style={{ background: '#6336EB', color: '#FFF', padding: '24px 20px', textAlign: 'center', position: 'relative' }}>
-              <button
-                onClick={closeModal}
-                style={{ position: 'absolute', top: '14px', right: '14px', background: 'none', border: 'none', color: '#FFF', fontSize: '20px', cursor: 'pointer' }}
+      {activeModal === 'modalViewTicketPass' && (() => {
+        const isCheckedIn = modalData?.status === 'used' || modalData?.checkedIn;
+        const isExpired = modalData?.status === 'expired';
+        const passCode = modalData?.ticketCode || modalData?.regId || modalData?.passCode || '#KNT-8401';
+        const attendeeName = modalData?.name || modalData?.attendeeName || 'Attendee';
+        const attendeeEmail = modalData?.email || 'attendee@knotnex.org';
+        const eventName = modalData?.eventName || modalData?.event || 'Annual Youth Tech Summit 2026';
+        const eventLocation = modalData?.location || modalData?.city || 'Moscone Center & Virtual Stages';
+        const passTier = modalData?.tier || modalData?.type || 'General Access';
+        const gate = modalData?.gate || 'Gate 1 (Main Hall)';
+
+        return (
+          <div
+            className="modal-backdrop open"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(15, 23, 42, 0.65)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 1050,
+              padding: '16px'
+            }}
+            onClick={handleBackdropClick}
+          >
+            <div
+              className="modal-dialog"
+              style={{
+                maxWidth: '390px',
+                width: '100%',
+                padding: '0',
+                borderRadius: '20px',
+                overflow: 'hidden',
+                background: '#FFFFFF',
+                boxShadow: '0 25px 60px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12)',
+                margin: 'auto'
+              }}
+            >
+              {/* Pass Header Banner */}
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #6336EB 0%, #4D25C9 100%)',
+                  color: '#FFFFFF',
+                  padding: '20px 20px 16px',
+                  textAlign: 'center',
+                  position: 'relative'
+                }}
               >
-                &times;
-              </button>
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.85, fontWeight: 700 }}>KNOTNEX VERIFIED PASS</div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '8px 0 2px' }}>
-                {modalData?.eventName || 'Annual Youth Tech Summit 2026'}
-              </h3>
-              <div style={{ fontSize: '12px', opacity: 0.9 }}>Moscone Center &amp; Virtual Stages</div>
-            </div>
-
-            <div style={{ padding: '24px', background: '#FFF' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <div>
-                  <div style={{ fontSize: '11px', color: 'var(--neutral-400)', textTransform: 'uppercase', fontWeight: 600 }}>Attendee</div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>{modalData?.name || modalData?.attendeeName || 'Rohan Verma'}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--neutral-400)', textTransform: 'uppercase', fontWeight: 600 }}>Pass Tier</div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#6336EB' }}>{modalData?.tier || 'General Access'}</div>
-                </div>
-              </div>
-
-              {/* Barcode & QR Box */}
-              <div style={{ background: '#F8F9FA', border: '1px solid #ECECEC', borderRadius: '12px', padding: '18px', textAlign: 'center', marginBottom: '16px' }}>
-                <div style={{ width: '130px', height: '130px', background: '#111827', margin: '0 auto 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '70px' }}>qr_code_2</span>
-                </div>
-                <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '15px', color: '#111827', letterSpacing: '1px' }}>
-                  {modalData?.ticketCode || '#KNT-8401'}
-                </div>
-                <div style={{ fontSize: '11.5px', color: '#12B76A', fontWeight: 600, marginTop: '4px' }}>
-                  ● Cryptographically Signed &amp; Valid
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
                 <button
-                  className="btn-secondary"
-                  style={{ flex: 1, justifyContent: 'center' }}
-                  onClick={() => showToast('Pass credential copied to clipboard!', 'info')}
+                  onClick={closeModal}
+                  aria-label="Close"
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: 'none',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.28)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.16)'; }}
                 >
-                  Share Link
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
-                <button
-                  className="btn-primary"
-                  style={{ flex: 1, justifyContent: 'center' }}
-                  onClick={() => {
-                    checkInAttendee(modalData?.ticketCode || modalData?.id);
-                    closeModal();
+
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: '#FFFFFF',
+                    marginBottom: '8px'
                   }}
                 >
-                  Check In
-                </button>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>KNOTNEX VERIFIED PASS</span>
+                </div>
+
+                <h3
+                  style={{
+                    fontSize: '17px',
+                    fontWeight: 800,
+                    color: '#FFFFFF',
+                    margin: '0 0 4px',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.3
+                  }}
+                >
+                  {eventName}
+                </h3>
+
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: 'rgba(255, 255, 255, 0.88)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <span>{eventLocation}</span>
+                </div>
+              </div>
+
+              {/* Pass Content Area */}
+              <div style={{ padding: '16px 20px 20px', background: '#FFFFFF' }}>
+                {/* Attendee Dossier Card */}
+                <div
+                  style={{
+                    background: '#F8FAFC',
+                    border: '1px solid #EDF2F7',
+                    borderRadius: '14px',
+                    padding: '14px 16px',
+                    marginBottom: '14px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em' }}>
+                        Attendee
+                      </div>
+                      <div style={{ fontSize: '14.5px', fontWeight: 700, color: '#0F172A', marginTop: '1px' }}>
+                        {attendeeName}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748B' }}>
+                        {attendeeEmail}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em' }}>
+                        Pass Tier
+                      </div>
+                      <div style={{ marginTop: '2px' }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            background: '#F4F3FF',
+                            color: '#5925DC',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '999px',
+                            border: '1px solid #D9D6FE'
+                          }}
+                        >
+                          {passTier}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #E2E8F0', paddingTop: '8px' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>Gate / Entry: </span>
+                      <span style={{ fontSize: '11.5px', fontWeight: 600, color: '#334155' }}>{gate}</span>
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          color: isCheckedIn ? '#12B76A' : (isExpired ? '#D92D20' : '#175CD3')
+                        }}
+                      >
+                        {isCheckedIn ? '● Checked-in' : (isExpired ? '● Expired' : '● Active Pass')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* QR Code Card */}
+                <div
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '14px',
+                    padding: '14px',
+                    textAlign: 'center',
+                    marginBottom: '16px'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '110px',
+                      height: '110px',
+                      background: '#FAFAFC',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '10px',
+                      margin: '0 auto 8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '6px'
+                    }}
+                  >
+                    <svg width="98" height="98" viewBox="0 0 110 110" fill="none">
+                      <rect x="5" y="5" width="28" height="28" rx="6" fill="#1E1B4B" />
+                      <rect x="9" y="9" width="20" height="20" rx="3" fill="#FFFFFF" />
+                      <rect x="13" y="13" width="12" height="12" rx="2" fill="#6336EB" />
+
+                      <rect x="77" y="5" width="28" height="28" rx="6" fill="#1E1B4B" />
+                      <rect x="81" y="9" width="20" height="20" rx="3" fill="#FFFFFF" />
+                      <rect x="85" y="13" width="12" height="12" rx="2" fill="#6336EB" />
+
+                      <rect x="5" y="77" width="28" height="28" rx="6" fill="#1E1B4B" />
+                      <rect x="9" y="81" width="20" height="20" rx="3" fill="#FFFFFF" />
+                      <rect x="13" y="85" width="12" height="12" rx="2" fill="#6336EB" />
+
+                      <rect x="39" y="11" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="51" y="11" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="63" y="11" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="11" y="39" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="11" y="51" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="11" y="63" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+
+                      <rect x="42" y="42" width="12" height="12" rx="3" fill="#6336EB" />
+                      <rect x="58" y="42" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="42" y="58" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="58" y="58" width="10" height="10" rx="2" fill="#1E1B4B" />
+
+                      <rect x="25" y="45" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="25" y="59" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="79" y="45" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="75" y="59" width="8" height="8" rx="2" fill="#1E1B4B" />
+                      <rect x="89" y="55" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="89" y="69" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+
+                      <rect x="45" y="75" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="59" y="75" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="45" y="89" width="8" height="8" rx="2" fill="#1E1B4B" />
+                      <rect x="59" y="89" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                      <rect x="75" y="85" width="8" height="8" rx="2" fill="#1E1B4B" />
+                      <rect x="89" y="85" width="6" height="6" rx="1.5" fill="#1E1B4B" />
+                    </svg>
+                  </div>
+
+                  <div
+                    style={{
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                      fontWeight: 700,
+                      fontSize: '13.5px',
+                      color: '#0F172A',
+                      letterSpacing: '1px',
+                      background: '#F1F5F9',
+                      padding: '2px 10px',
+                      borderRadius: '6px',
+                      display: 'inline-block'
+                    }}
+                  >
+                    {passCode}
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      color: isCheckedIn ? '#12B76A' : '#16A34A',
+                      fontWeight: 600,
+                      marginTop: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>{isCheckedIn ? 'Credential Scanned & Verified' : 'Cryptographically Signed & Valid'}</span>
+                  </div>
+                </div>
+
+                {/* Footer Close Button in App Bar Create Button Design */}
+                {!isCheckedIn && !isExpired ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{
+                        height: '38px',
+                        padding: '0 20px',
+                        borderRadius: '9999px',
+                        fontSize: '13px',
+                        fontWeight: 500
+                      }}
+                      onClick={closeModal}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      className="appbar-create-btn"
+                      style={{
+                        height: '38px',
+                        padding: '0 22px',
+                        fontSize: '13px'
+                      }}
+                      onClick={() => {
+                        checkInAttendee(passCode || modalData?.id);
+                        closeModal();
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      Check In
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <button
+                      type="button"
+                      className="appbar-create-btn"
+                      style={{
+                        height: '38px',
+                        padding: '0 32px',
+                        fontSize: '13.5px'
+                      }}
+                      onClick={closeModal}
+                    >
+                      Close
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 9. modalIssueTicket (Enlarged from down to app bar center) */}
       {activeModal === 'modalIssueTicket' && (() => {
@@ -1127,7 +1421,20 @@ export default function ModalManager() {
 
       {/* 13. modalTicketIssueDetails */}
       {activeModal === 'modalTicketIssueDetails' && (
-        <div className="modal-backdrop open" style={{ display: 'flex' }} onClick={handleBackdropClick}>
+        <div
+          className="modal-backdrop open"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 1050,
+            padding: '16px'
+          }}
+          onClick={handleBackdropClick}
+        >
           <div className="modal-dialog" style={{ maxWidth: '580px', width: '90%' }}>
             <div className="modal-header">
               <div className="modal-title-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1150,9 +1457,56 @@ export default function ModalManager() {
                     {typeof modalData?.user === 'object' ? modalData.user.name : (modalData?.user || modalData?.attendee || 'Priya Sharma')}
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '12px', color: 'var(--neutral-400)', fontWeight: 600 }}>TRANSACTION</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 600 }}>{modalData?.txnId || 'TXN-8401-HDFC'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 600, color: 'var(--neutral-900)' }}>
+                      {modalData?.txnId || modalData?.paymentRef || 'TXN-8401-HDFC'}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-copy-txn-modal"
+                      onClick={() => {
+                        const idToCopy = modalData?.txnId || modalData?.paymentRef || 'TXN-8401-HDFC';
+                        navigator.clipboard.writeText(idToCopy);
+                        setCopiedTxnModal(true);
+                        showToast(`Copied Transaction ID "${idToCopy}" to clipboard!`, 'success');
+                        setTimeout(() => setCopiedTxnModal(false), 2000);
+                      }}
+                      title="Copy Transaction ID"
+                      style={{
+                        background: copiedTxnModal ? '#ECFDF3' : '#F2F4F7',
+                        border: copiedTxnModal ? '1px solid #A6F4C5' : '1px solid #D0D5DD',
+                        borderRadius: '6px',
+                        padding: '3px 8px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: copiedTxnModal ? '#12B76A' : '#344054',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {copiedTxnModal ? (
+                        <>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          <span>Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                          </svg>
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '12px', color: 'var(--neutral-400)', fontWeight: 600 }}>AMOUNT</span>

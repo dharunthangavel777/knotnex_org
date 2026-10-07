@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import BackButton from '../components/common/BackButton';
 import { getEventPoster, getUserAvatar } from '../data/initialData';
+import { AttendeesTableSkeleton } from '../components/skeletons';
+import SearchBar from '../components/common/SearchBar';
 
 export default function EventDetailsView() {
   const {
@@ -15,6 +17,16 @@ export default function EventDetailsView() {
 
   const [attendeeSearch, setAttendeeSearch] = useState('');
   const [attendeeFilter, setAttendeeFilter] = useState('all');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+
+  const handleFilterChange = (newFilter) => {
+    if (newFilter === attendeeFilter) return;
+    setIsTabLoading(true);
+    setAttendeeFilter(newFilter);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 260);
+  };
 
   if (!selectedEvent) {
     return (
@@ -333,69 +345,52 @@ export default function EventDetailsView() {
             <div className="attendee-status-filter-pills">
               <button
                 className={`attendee-filter-pill-btn ${attendeeFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setAttendeeFilter('all')}
+                onClick={() => handleFilterChange('all')}
               >
                 All ({activeRegs.length})
               </button>
               <button
                 className={`attendee-filter-pill-btn ${attendeeFilter === 'checked-in' ? 'active' : ''}`}
-                onClick={() => setAttendeeFilter('checked-in')}
+                onClick={() => handleFilterChange('checked-in')}
               >
                 Checked-in ({activeRegs.filter(r => r.checkedIn || r.status === 'used').length})
               </button>
               <button
                 className={`attendee-filter-pill-btn ${attendeeFilter === 'confirmed' ? 'active' : ''}`}
-                onClick={() => setAttendeeFilter('confirmed')}
+                onClick={() => handleFilterChange('confirmed')}
               >
                 Confirmed ({activeRegs.filter(r => !r.checkedIn && r.status !== 'used').length})
               </button>
               <button
                 className={`attendee-filter-pill-btn ${attendeeFilter === 'paid' ? 'active' : ''}`}
-                onClick={() => setAttendeeFilter('paid')}
+                onClick={() => handleFilterChange('paid')}
               >
                 Paid ({activeRegs.filter(r => r.paymentType !== 'sponsored').length})
               </button>
               <button
                 className={`attendee-filter-pill-btn ${attendeeFilter === 'sponsored' ? 'active' : ''}`}
-                onClick={() => setAttendeeFilter('sponsored')}
+                onClick={() => handleFilterChange('sponsored')}
               >
                 Sponsored ({activeRegs.filter(r => r.paymentType === 'sponsored' || r.type === 'Student').length})
               </button>
             </div>
 
             <div className="attendee-console-actions">
-              <div className="attendee-search-wrapper">
-                <svg className="attendee-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input
-                  type="text"
-                  className="attendee-search-input-field"
-                  placeholder="Search attendees by name, email, phone (+91), ticket ID, city..."
-                  id="indAttendeeSearch"
-                  autoComplete="off"
-                  value={attendeeSearch}
-                  onChange={(e) => setAttendeeSearch(e.target.value)}
-                />
-                {attendeeSearch && (
-                  <button
-                    type="button"
-                    className="search-clear-btn"
-                    id="btnClearAttendeeSearch"
-                    aria-label="Clear search"
-                    style={{ display: "inline-flex" }}
-                    onClick={() => setAttendeeSearch('')}
-                  >
-                    &times;
-                  </button>
-                )}
-              </div>
+              <SearchBar
+                id="indAttendeeSearch"
+                placeholder="Search attendees by name, email, phone (+91), ticket ID..."
+                value={attendeeSearch}
+                onChange={(e) => setAttendeeSearch(e.target.value)}
+                width="380px"
+              />
             </div>
           </div>
 
           <div className="table-responsive-wrapper" style={{ overflowX: "auto" }}>
-            <table className="recent-products-table" id="indRegistrationsTable">
+            {isTabLoading ? (
+              <AttendeesTableSkeleton rows={6} />
+            ) : (
+              <table className="recent-products-table" id="indRegistrationsTable">
               <colgroup>
                 <col style={{ width: "44px" }} />
                 <col style={{ width: "18%" }} />
@@ -417,7 +412,7 @@ export default function EventDetailsView() {
                   <th>Transaction ID</th>
                   <th>City / State</th>
                   <th>Registered Date</th>
-                  <th style={{ textAlign: "right", paddingRight: "24px" }}>Check-in / Action</th>
+                  <th>Check-in / Action</th>
                 </tr>
               </thead>
               <tbody id="indRegistrationsTableBody">
@@ -474,8 +469,8 @@ export default function EventDetailsView() {
                         <td style={{ fontSize: "12px", color: "var(--neutral-500)" }}>
                           {reg.date || 'Today'}
                         </td>
-                        <td style={{ textAlign: "right", paddingRight: "24px" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: "8px" }}>
                             <button
                               className={`status-badge-minimal ${isCheckedIn ? 'completed' : 'upcoming'}`}
                               style={{ cursor: "pointer", border: "none" }}
@@ -493,8 +488,9 @@ export default function EventDetailsView() {
                 )}
               </tbody>
             </table>
-          </div>
+          )}
         </div>
+      </div>
       </div>
     </section>
   );

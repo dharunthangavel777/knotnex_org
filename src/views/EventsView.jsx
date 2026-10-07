@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getEventPoster } from '../data/initialData';
+import { EventsTableSkeleton } from '../components/skeletons';
+import SearchBar from '../components/common/SearchBar';
 
 export default function EventsView() {
   const {
@@ -12,6 +14,16 @@ export default function EventsView() {
 
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+
+  const handleFilterChange = (newFilter) => {
+    if (newFilter === filter) return;
+    setIsTabLoading(true);
+    setFilter(newFilter);
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 280);
+  };
 
   const parseTicketPrice = (price) => {
     if (typeof price === 'number') return price;
@@ -170,63 +182,46 @@ export default function EventsView() {
           <div className="sheets-status-filter-pills">
             <button
               className={`sheets-filter-pill-btn ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
+              onClick={() => handleFilterChange('all')}
             >
               All Events ({events.length})
             </button>
             <button
               className={`sheets-filter-pill-btn ${filter === 'upcoming' ? 'active' : ''}`}
-              onClick={() => setFilter('upcoming')}
+              onClick={() => handleFilterChange('upcoming')}
             >
               Upcoming ({events.filter(e => e.status === 'upcoming').length})
             </button>
             <button
               className={`sheets-filter-pill-btn ${filter === 'ongoing' ? 'active' : ''}`}
-              onClick={() => setFilter('ongoing')}
+              onClick={() => handleFilterChange('ongoing')}
             >
               Ongoing ({events.filter(e => e.status === 'ongoing').length})
             </button>
             <button
               className={`sheets-filter-pill-btn ${filter === 'completed' ? 'active' : ''}`}
-              onClick={() => setFilter('completed')}
+              onClick={() => handleFilterChange('completed')}
             >
               Completed ({events.filter(e => e.status === 'completed').length})
             </button>
           </div>
 
           <div className="sheets-console-actions">
-            <div className="sheets-search-wrapper">
-              <svg className="sheets-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                className="sheets-search-input-field"
-                placeholder="Search events by name, location, category..."
-                id="eventsSearchInput"
-                autoComplete="off"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="search-clear-btn"
-                  id="btnClearEventsSearch"
-                  aria-label="Clear search"
-                  style={{ display: 'inline-flex' }}
-                  onClick={() => setSearchTerm('')}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
+            <SearchBar
+              id="eventsSearchInput"
+              placeholder="Search events by name, location, category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              width="360px"
+            />
           </div>
         </div>
 
         {/* Events Table */}
         <div style={{ overflowX: 'auto' }} id="eventsTableWrapper">
+          {isTabLoading ? (
+            <EventsTableSkeleton rows={5} />
+          ) : (
             <table className="recent-products-table" id="eventsTable">
               <colgroup>
                 <col style={{ width: '48px' }} />
@@ -323,8 +318,9 @@ export default function EventsView() {
                 })}
               </tbody>
             </table>
-          </div>
+          )}
         </div>
+      </div>
       </section>
     );
   }
