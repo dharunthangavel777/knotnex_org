@@ -5,7 +5,7 @@ import { SchemesListSkeleton, SchemeApplicationsSkeleton } from '../components/s
 import SearchBar from '../components/common/SearchBar';
 
 export default function SchemesView() {
-  const { schemes, schemeApplications, activeSubAction, navigateTo, showToast } = useApp();
+  const { schemes, schemeApplications, activeSubAction, navigateTo, showToast, setEditingScheme } = useApp();
 
   const [activeTab, setActiveTab] = useState(activeSubAction === 'manage-schemes' ? 'applications' : 'schemes');
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,7 +65,14 @@ export default function SchemesView() {
           </div>
         </div>
         <div className="header-actions">
-          <button className="btn-primary" id="btnOpenCreateSchemeModal" onClick={() => navigateTo('createScheme')}>
+          <button
+            className="btn-primary"
+            id="btnOpenCreateSchemeModal"
+            onClick={() => {
+              if (setEditingScheme) setEditingScheme(null);
+              navigateTo('createScheme');
+            }}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
@@ -190,7 +197,7 @@ export default function SchemesView() {
               placeholder="Search schemes, grants, tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              width="360px"
+              width="320px"
             />
             <button
               className="circle-action-btn"
@@ -331,7 +338,7 @@ export default function SchemesView() {
                   <th>Applied Scheme</th>
                   <th>Funding Requested</th>
                   <th>Review Score</th>
-                  <th style={{ textAlign: 'right', paddingRight: '16px' }}>Action</th>
+                  <th className="col-right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -368,7 +375,7 @@ export default function SchemesView() {
                         ★ {a.score || '9.4 / 10'}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'right', paddingRight: '16px' }}>
+                    <td className="col-right">
                       <button
                         className="btn-primary"
                         style={{ height: '30px', padding: '0 10px', fontSize: '12px' }}

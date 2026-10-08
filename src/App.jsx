@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 
 // Layout & Common Components
@@ -30,6 +30,29 @@ import SettingsView from './views/SettingsView';
 
 function AppContent() {
   const { activeView, isSidebarCollapsed, isLoading, isInitialLoading } = useApp();
+
+  useEffect(() => {
+    const resetScroll = () => {
+      const mainArea = document.getElementById('mainContentArea');
+      if (mainArea) {
+        mainArea.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    resetScroll();
+    requestAnimationFrame(resetScroll);
+    const t1 = setTimeout(resetScroll, 50);
+    const t2 = setTimeout(resetScroll, 200);
+    const t3 = setTimeout(resetScroll, 420);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [activeView, isLoading]);
 
   const renderActiveView = () => {
     switch (activeView) {

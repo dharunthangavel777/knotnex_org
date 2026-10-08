@@ -21,13 +21,13 @@ function parseEventData(ev) {
       eventTime: '',
       location: '',
       description: '',
-      category: 'Technology',
-      capacity: '1000',
-      ticketPrice: '₹550',
+      category: '',
+      capacity: '',
+      ticketPrice: '',
       speakers: '',
-      organizerName: 'Knotbox Technologies',
-      organizerEmail: 'events@knotbox.org',
-      organizerPhone: '+91 800-KNOTNEX',
+      organizerName: '',
+      organizerEmail: '',
+      organizerPhone: '',
       coverImage: null,
       originalCoverImage: null,
       sessions: []
@@ -43,15 +43,13 @@ function parseEventData(ev) {
       parsedTime = parts[1] || '';
     } else {
       parsedDate = ev.date;
-      parsedTime = ev.time || '09:00 AM - 06:00 PM';
+      parsedTime = ev.time || '';
     }
   }
 
   let priceVal = '';
-  if (ev.ticketPrice !== undefined) {
+  if (ev.ticketPrice !== undefined && ev.ticketPrice !== null) {
     priceVal = typeof ev.ticketPrice === 'number' ? `₹${ev.ticketPrice}` : String(ev.ticketPrice);
-  } else {
-    priceVal = '₹550';
   }
 
   let spkStr = '';
@@ -61,40 +59,11 @@ function parseEventData(ev) {
     spkStr = String(ev.speakers);
   }
 
-  const poster = ev.poster || getEventPoster(ev);
+  const poster = ev.poster || null;
 
   const initialSessions = (ev.sessions && ev.sessions.length > 0)
     ? ev.sessions
-    : [
-        {
-          id: 'sess-1',
-          title: 'Opening Keynote & Foundation Welcome',
-          speaker: (Array.isArray(ev.speakers) && ev.speakers[0])
-            ? (typeof ev.speakers[0] === 'string' ? ev.speakers[0] : ev.speakers[0].name)
-            : 'Lead Keynote Speaker',
-          time: '09:30 AM - 10:45 AM',
-          room: 'Main Auditorium / Hall A',
-          description: 'Welcome address and industry landscape keynote presentation.'
-        },
-        {
-          id: 'sess-2',
-          title: 'Core Panel Discussion & Technical Showcase',
-          speaker: (Array.isArray(ev.speakers) && ev.speakers[1])
-            ? (typeof ev.speakers[1] === 'string' ? ev.speakers[1] : ev.speakers[1].name)
-            : 'Guest Panelists',
-          time: '11:15 AM - 01:00 PM',
-          room: 'Track 1 / Stage Beta',
-          description: 'Interactive deep dive exploring real-world deployments and methodologies.'
-        },
-        {
-          id: 'sess-3',
-          title: 'Networking Clinic & Closing Showcase',
-          speaker: 'Community Team',
-          time: '02:30 PM - 04:30 PM',
-          room: 'Exhibition Pavilion',
-          description: 'Open Q&A, demo tables, and one-on-one collaboration sessions.'
-        }
-      ];
+    : [];
 
   return {
     name: ev.name || '',
@@ -102,13 +71,13 @@ function parseEventData(ev) {
     eventTime: parsedTime,
     location: ev.location || '',
     description: ev.description || '',
-    category: ev.category || 'Technology',
-    capacity: ev.capacity !== undefined ? String(ev.capacity) : '1000',
+    category: ev.category || '',
+    capacity: ev.capacity !== undefined ? String(ev.capacity) : '',
     ticketPrice: priceVal,
     speakers: spkStr,
-    organizerName: ev.organizer || ev.organizedBy?.name || 'Knotbox Technologies',
-    organizerEmail: ev.contact?.email || ev.organizerEmail || 'events@knotbox.org',
-    organizerPhone: ev.contact?.phone || ev.organizerPhone || '+91 800-KNOTNEX',
+    organizerName: ev.organizer || ev.organizedBy?.name || '',
+    organizerEmail: ev.contact?.email || ev.organizerEmail || '',
+    organizerPhone: ev.contact?.phone || ev.organizerPhone || '',
     coverImage: poster || null,
     originalCoverImage: ev.originalPoster || poster || null,
     sessions: initialSessions
@@ -150,12 +119,41 @@ export default function CreateEventView({
 
   const changeStep = (nextStep) => {
     setIsStepLoading(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const resetScroll = () => {
+      const mainArea = document.getElementById('mainContentArea');
+      if (mainArea) {
+        mainArea.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+    };
+    resetScroll();
     setTimeout(() => {
       setCurrentStep(nextStep);
       setIsStepLoading(false);
+      resetScroll();
+      requestAnimationFrame(resetScroll);
+      setTimeout(resetScroll, 50);
+      setTimeout(resetScroll, 250);
     }, 220);
   };
+
+  useEffect(() => {
+    const resetScroll = () => {
+      const mainArea = document.getElementById('mainContentArea');
+      if (mainArea) {
+        mainArea.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+    };
+    resetScroll();
+    requestAnimationFrame(resetScroll);
+    const t1 = setTimeout(resetScroll, 50);
+    const t2 = setTimeout(resetScroll, 250);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [currentStep]);
   const [coverImage, setCoverImage] = useState(initData.coverImage);
   const [originalCoverImage, setOriginalCoverImage] = useState(initData.originalCoverImage);
   const [showCropScreen, setShowCropScreen] = useState(false);
@@ -207,13 +205,13 @@ export default function CreateEventView({
         time: data.eventTime,
         location: data.location,
         category: data.category,
-        capacity: Number(data.capacity) || 1000,
+        capacity: data.capacity ? Number(data.capacity) : null,
         ticketPrice: data.ticketPrice,
         description: data.description,
         sessions: data.sessions,
         chiefGuests: mappedChiefGuests.length > 0 ? mappedChiefGuests : undefined,
         organizerData: editingEvent.organizerData || {
-          initials: 'KB',
+          initials: data.organizerName ? data.organizerName.substring(0, 2).toUpperCase() : '',
           name: data.organizerName,
           subtitle: 'Organizing Partner',
           verified: true
@@ -221,7 +219,7 @@ export default function CreateEventView({
         contact: editingEvent.contact || {
           email: data.organizerEmail,
           phone: data.organizerPhone,
-          helpDesk: 'help@knotbox.org'
+          helpDesk: ''
         }
       });
       setCurrentStep('details');
@@ -320,10 +318,6 @@ export default function CreateEventView({
     if (!eventDate.trim()) { if (addToast) addToast('Event date is required.', 'error'); return; }
     if (!location.trim()) { if (addToast) addToast('Location is required.', 'error'); return; }
     if (!description.trim()) { if (addToast) addToast('Event description is required.', 'error'); return; }
-    if (capacity !== '' && Number(capacity) < 0) {
-      if (addToast) addToast('Capacity cannot be negative.', 'error');
-      return;
-    }
     changeStep('eligibility');
   };
 
@@ -356,29 +350,29 @@ export default function CreateEventView({
       ...(editingEvent || {}),
       id: targetId,
       name: name.trim(),
-      poster: coverImage || (editingEvent ? editingEvent.poster : '/assets/posters/poster-tech-summit.svg'),
+      poster: coverImage || (editingEvent ? editingEvent.poster : null),
       originalPoster: originalCoverImage || coverImage,
       date: eventDate + (eventTime ? ' • ' + eventTime : ''),
       time: eventTime,
       location: location.trim(),
-      category: category.trim() || editingEvent?.category || 'General',
-      capacity: Number(capacity) || editingEvent?.capacity || 250,
-      ticketPrice: ticketPrice.trim() || editingEvent?.ticketPrice || '₹550',
+      category: category.trim() || editingEvent?.category || '',
+      capacity: capacity ? Number(capacity) : (editingEvent?.capacity ?? null),
+      ticketPrice: ticketPrice.trim() || editingEvent?.ticketPrice || '',
       registered: editingEvent?.registered ?? 0,
       status: editingEvent?.status || 'upcoming',
       description: description.trim(),
       sessions: sessions || [],
       speakers: speakers ? speakers.split(',').map(s => s.trim()).filter(Boolean) : (editingEvent?.speakers || []),
-      organizer: organizerName.trim() || editingEvent?.organizer || 'Knotbox Technologies',
-      organizedBy: { name: organizerName.trim() || 'Knotbox Technologies', subtitle: organizerName.trim() || 'Knotbox Technologies' },
+      organizer: organizerName.trim() || editingEvent?.organizer || '',
+      organizedBy: { name: organizerName.trim(), subtitle: organizerName.trim() },
       organizerData: {
         ...(editingEvent?.organizerData || {}),
-        name: organizerName.trim() || 'Knotbox Technologies',
+        name: organizerName.trim(),
       },
       contact: {
         ...(editingEvent?.contact || {}),
-        email: organizerEmail.trim() || editingEvent?.contact?.email || 'events@knotbox.org',
-        phone: organizerPhone.trim() || editingEvent?.contact?.phone || '+91 800-KNOTNEX',
+        email: organizerEmail.trim() || editingEvent?.contact?.email || '',
+        phone: organizerPhone.trim() || editingEvent?.contact?.phone || '',
       }
     };
 
@@ -420,14 +414,14 @@ export default function CreateEventView({
         ...(editingEvent || {}),
         id: targetId,
         name: name.trim(),
-        poster: coverImage || (editingEvent ? editingEvent.poster : '/assets/posters/poster-tech-summit.svg'),
+        poster: coverImage || (editingEvent ? editingEvent.poster : null),
         originalPoster: originalCoverImage || coverImage,
         date: eventDate + (eventTime ? ' • ' + eventTime : ''),
         time: eventTime,
         location: location.trim(),
-        category: category.trim() || editingEvent?.category || 'General',
-        capacity: Number(capacity) || editingEvent?.capacity || 250,
-        ticketPrice: ticketPrice.trim() || editingEvent?.ticketPrice || '₹550',
+        category: category.trim() || editingEvent?.category || '',
+        capacity: capacity ? Number(capacity) : (editingEvent?.capacity ?? null),
+        ticketPrice: ticketPrice.trim() || editingEvent?.ticketPrice || '',
         registered: editingEvent?.registered ?? 0,
         status: editingEvent?.status || 'upcoming',
         description: description.trim(),
@@ -471,35 +465,35 @@ export default function CreateEventView({
       ...(editingEvent || {}),
       id: draftEventData?.id || (editingEvent ? editingEvent.id : 'ev-' + Date.now()),
       name: name.trim(),
-      poster: coverImage || (editingEvent ? editingEvent.poster : 'assets/posters/poster-tech.jpg'),
+      poster: coverImage || (editingEvent ? editingEvent.poster : null),
       originalPoster: originalCoverImage || coverImage,
       date: eventDate + (eventTime ? ' • ' + eventTime : ''),
       time: eventTime,
       location: location.trim(),
-      category: category.trim() || editingEvent?.category || 'General',
-      capacity: Number(capacity) || editingEvent?.capacity || 250,
-      ticketPrice: ticketPrice.trim() || editingEvent?.ticketPrice || 'Free Pass',
+      category: category.trim() || editingEvent?.category || '',
+      capacity: capacity ? Number(capacity) : (editingEvent?.capacity ?? null),
+      ticketPrice: ticketPrice.trim() || editingEvent?.ticketPrice || '',
       registered: editingEvent?.registered ?? 0,
       status: editingEvent?.status || 'upcoming',
       description: description.trim(),
-      speakers: spk && spk.length > 0 ? spk.map(s => s.name) : (speakers ? speakers.split(',').map(s => s.trim()).filter(Boolean) : (editingEvent?.speakers || ['Dr. Ramesh Krishnan', 'Priya Nair'])),
+      speakers: spk && spk.length > 0 ? spk.map(s => s.name) : (speakers ? speakers.split(',').map(s => s.trim()).filter(Boolean) : (editingEvent?.speakers || [])),
       chiefGuests: spk || editingEvent?.chiefGuests || [],
       sponsors: spn || editingEvent?.sponsors || [],
       photos: pht || editingEvent?.photos || [],
       documents: docs || editingEvent?.documents || [],
-      organizer: org?.name || organizerName.trim() || editingEvent?.organizer || 'Ability First Foundation',
-      organizedBy: org || editingEvent?.organizedBy || { name: organizerName.trim() || 'Ability First Foundation', subtitle: organizerName.trim() || 'Ability First Foundation' },
+      organizer: org?.name || organizerName.trim() || editingEvent?.organizer || '',
+      organizedBy: org || editingEvent?.organizedBy || { name: organizerName.trim(), subtitle: organizerName.trim() },
       organizerData: org || editingEvent?.organizerData,
-      volunteersNeeded: vn !== undefined ? vn : (editingEvent?.volunteersNeeded ?? true),
-      volunteerRole: vr || editingEvent?.volunteerRole || 'Usher & Accessibility Support Assistant',
-      volunteerOpenings: vo !== undefined ? vo : (editingEvent?.volunteerOpenings ?? 15),
+      volunteersNeeded: vn !== undefined ? vn : (editingEvent?.volunteersNeeded ?? false),
+      volunteerRole: vr || editingEvent?.volunteerRole || '',
+      volunteerOpenings: vo !== undefined ? vo : (editingEvent?.volunteerOpenings ?? 0),
       contact: ct || editingEvent?.contact,
       supportContact: [
-        { id: 'email', label: 'Email', icon: 'mail', value: ct?.email || organizerEmail.trim() || editingEvent?.contact?.email || 'events@knotnex.org' },
-        { id: 'call', label: 'Call Organizer', icon: 'phone', value: ct?.phone || organizerPhone.trim() || editingEvent?.contact?.phone || '+91 800-KNOTNEX' },
-        { id: 'help', label: 'Event Help Desk', icon: 'help', value: ct?.helpDesk || editingEvent?.contact?.helpDesk || 'help@knotnex.org' }
+        { id: 'email', label: 'Email', icon: 'mail', value: ct?.email || organizerEmail.trim() || editingEvent?.contact?.email || '' },
+        { id: 'call', label: 'Call Organizer', icon: 'phone', value: ct?.phone || organizerPhone.trim() || editingEvent?.contact?.phone || '' },
+        { id: 'help', label: 'Event Help Desk', icon: 'help', value: ct?.helpDesk || editingEvent?.contact?.helpDesk || '' }
       ],
-      eligibilityCriteria: ec && ec.length > 0 ? ec : (editingEvent?.eligibilityCriteria || ['Open to all attendees and community members.']),
+      eligibilityCriteria: ec && ec.length > 0 ? ec : (editingEvent?.eligibilityCriteria || []),
       faqs: fqs || editingEvent?.faqs || [],
       sessions: sessions || editingEvent?.sessions || []
     };
@@ -581,17 +575,47 @@ export default function CreateEventView({
     return (
       <EventEligibilityScreen
         eventName={name}
-        initialCriteria={draftEventData?.eligibilityCriteria}
-        initialSpeakers={draftEventData?.chiefGuests}
-        initialSponsors={draftEventData?.sponsors}
-        initialPhotos={draftEventData?.photos}
-        initialDocuments={draftEventData?.documents}
-        initialOrganizer={draftEventData?.organizerData}
-        initialVolunteersNeeded={draftEventData?.volunteersNeeded}
-        initialVolunteerRole={draftEventData?.volunteerRole}
-        initialVolunteerOpenings={draftEventData?.volunteerOpenings}
-        initialContact={draftEventData?.contact}
-        initialFaqs={draftEventData?.faqs}
+        initialCriteria={draftEventData?.eligibilityCriteria || []}
+        initialSpeakers={
+          draftEventData?.chiefGuests ||
+          (speakers
+            ? speakers.split(',').map(s => s.trim()).filter(Boolean).map((s, idx) => ({
+                id: `spk-${idx + 1}`,
+                name: s,
+                role: 'Speaker',
+                initials: s.substring(0, 2).toUpperCase() || 'SP',
+                verified: true
+              }))
+            : [])
+        }
+        initialSponsors={draftEventData?.sponsors || []}
+        initialPhotos={draftEventData?.photos || []}
+        initialDocuments={draftEventData?.documents || []}
+        initialOrganizer={
+          draftEventData?.organizerData ||
+          (organizerName.trim()
+            ? {
+                initials: organizerName.trim().substring(0, 2).toUpperCase() || 'OR',
+                name: organizerName.trim(),
+                subtitle: 'Organizing Partner',
+                verified: true
+              }
+            : null)
+        }
+        initialVolunteersNeeded={draftEventData?.volunteersNeeded ?? false}
+        initialVolunteerRole={draftEventData?.volunteerRole || ''}
+        initialVolunteerOpenings={draftEventData?.volunteerOpenings || 0}
+        initialContact={
+          draftEventData?.contact ||
+          (organizerEmail.trim() || organizerPhone.trim()
+            ? {
+                email: organizerEmail.trim(),
+                phone: organizerPhone.trim(),
+                helpDesk: ''
+              }
+            : null)
+        }
+        initialFaqs={draftEventData?.faqs || []}
         onBack={() => changeStep('details')}
         onNext={handleProceedToFormBuilder}
         onSaveDraft={handleSaveEligibilityDraft}
@@ -904,7 +928,7 @@ export default function CreateEventView({
             </svg>
             <span style={{ color: '#64748B', fontSize: 12 }}>Category:</span>
             <select
-              value={category || 'Technology'}
+              value={category || ''}
               onChange={e => setCategory(e.target.value)}
               style={{
                 border: 'none',
@@ -912,10 +936,11 @@ export default function CreateEventView({
                 outline: 'none',
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#1E1B4B',
+                color: category ? '#1E1B4B' : '#64748B',
                 cursor: 'pointer'
               }}
             >
+              <option value="">Select Category</option>
               <option value="Technology">Technology</option>
               <option value="Environment">Environment</option>
               <option value="Community">Community</option>
@@ -957,43 +982,6 @@ export default function CreateEventView({
                 width: 90
               }}
             />
-            <PencilIcon size={12} />
-          </div>
-
-          {/* Capacity Chip */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            background: '#F8F9FB',
-            border: '1px solid #E2E8F0',
-            borderRadius: 20,
-            padding: '7px 16px',
-            fontSize: 13,
-            fontWeight: 500,
-            color: '#1E1B4B'
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6336EB" strokeWidth="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-            </svg>
-            <span style={{ color: '#64748B', fontSize: 12 }}>Capacity:</span>
-            <input
-              type="number"
-              value={capacity}
-              onChange={e => setCapacity(e.target.value)}
-              placeholder="1000"
-              style={{
-                border: 'none',
-                background: 'transparent',
-                outline: 'none',
-                fontSize: 13,
-                fontWeight: 600,
-                color: '#1E1B4B',
-                width: 70
-              }}
-            />
-            <span style={{ fontSize: 12, color: '#64748B' }}>Seats</span>
             <PencilIcon size={12} />
           </div>
         </div>

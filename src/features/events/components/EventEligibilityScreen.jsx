@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BackButton from '../../../components/common/BackButton';
 
 export default function EventEligibilityScreen({
@@ -9,9 +9,9 @@ export default function EventEligibilityScreen({
   initialPhotos,
   initialDocuments,
   initialOrganizer,
-  initialVolunteersNeeded = true,
-  initialVolunteerRole = 'Usher & Accessibility Support Assistant',
-  initialVolunteerOpenings = 15,
+  initialVolunteersNeeded = false,
+  initialVolunteerRole = '',
+  initialVolunteerOpenings = 0,
   initialContact,
   initialFaqs,
   onBack,
@@ -19,79 +19,78 @@ export default function EventEligibilityScreen({
   onSaveDraft,
   addToast
 }) {
+  useEffect(() => {
+    const resetScroll = () => {
+      const mainArea = document.getElementById('mainContentArea');
+      if (mainArea) {
+        mainArea.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+    };
+    resetScroll();
+    requestAnimationFrame(resetScroll);
+    const t = setTimeout(resetScroll, 50);
+    const t2 = setTimeout(resetScroll, 200);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+    };
+  }, []);
   const [rules, setRules] = useState(
-    initialCriteria && initialCriteria.length > 0
-      ? initialCriteria
-      : [
-          'Open to persons with disabilities, caregivers, special educators, healthcare professionals, and inclusive technology innovators',
-          'Attendees under 15 years must be accompanied by an adult, parent or registered guardian',
-          'Wheelchair-accessible pathways, step-free venue access, and dedicated on-site assistance volunteers provided',
-          'Real-time sign language interpretation (ISL/ASL) and live captioning available for all keynote sessions'
-        ]
+    Array.isArray(initialCriteria) ? initialCriteria : []
   );
 
   const [speakers, setSpeakers] = useState(
-    initialSpeakers && initialSpeakers.length > 0
-      ? initialSpeakers
-      : [
-          { id: 'spk-1', initials: 'RK', name: 'Dr. Ramesh Krishnan', role: 'Chief Medical Officer', verified: true },
-          { id: 'spk-2', initials: 'PN', name: 'Priya Nair', role: 'Accessibility Advocate', verified: true }
-        ]
+    Array.isArray(initialSpeakers) ? initialSpeakers : []
   );
 
   const [sponsors, setSponsors] = useState(
-    initialSponsors && initialSponsors.length > 0
-      ? initialSponsors
-      : [
-          { id: 'spn-1', initials: 'GA', name: 'Google Access', role: 'Platinum Partner', verified: true },
-          { id: 'spn-2', initials: 'AC', name: 'Apple Care', role: 'Gold Partner', verified: true }
-        ]
+    Array.isArray(initialSponsors) ? initialSponsors : []
   );
 
   const [photos, setPhotos] = useState(initialPhotos || []);
   const [documents, setDocuments] = useState(initialDocuments || []);
 
-  const [organizer, setOrganizer] = useState(
-    initialOrganizer || {
-      initials: 'AF',
-      name: 'Ability First Foundation',
-      subtitle: 'Inclusive Community Partner',
-      verified: true
-    }
-  );
+  const [organizer, setOrganizer] = useState(() => {
+    if (initialOrganizer && initialOrganizer.name) return initialOrganizer;
+    return {
+      initials: '',
+      name: '',
+      subtitle: '',
+      verified: false
+    };
+  });
 
   // Inline editing state for Organized By (NO POPUPS)
   const [isEditingOrganizer, setIsEditingOrganizer] = useState(false);
-  const [orgNameInput, setOrgNameInput] = useState(organizer.name);
+  const [orgNameInput, setOrgNameInput] = useState(organizer.name || '');
   const [orgSubtitleInput, setOrgSubtitleInput] = useState(organizer.subtitle || '');
 
   const [volunteersNeeded, setVolunteersNeeded] = useState(
-    initialVolunteersNeeded !== undefined ? initialVolunteersNeeded : true
+    initialVolunteersNeeded !== undefined ? initialVolunteersNeeded : false
   );
-  const [volunteerRole, setVolunteerRole] = useState(initialVolunteerRole);
-  const [volunteerOpenings, setVolunteerOpenings] = useState(initialVolunteerOpenings);
+  const [volunteerRole, setVolunteerRole] = useState(initialVolunteerRole || '');
+  const [volunteerOpenings, setVolunteerOpenings] = useState(initialVolunteerOpenings || 0);
 
-  const [contact, setContact] = useState(
-    initialContact || {
-      email: 'events@knotnex.org',
-      phone: '+91 800-KNOTNEX',
-      helpDesk: 'help@knotnex.org'
+  const [contact, setContact] = useState(() => {
+    if (initialContact && (initialContact.email || initialContact.phone || initialContact.helpDesk)) {
+      return initialContact;
     }
-  );
+    return {
+      email: '',
+      phone: '',
+      helpDesk: ''
+    };
+  });
 
   // Inline editing state for Contact & Support (NO POPUPS)
   const [isEditingContact, setIsEditingContact] = useState(false);
-  const [contactEmailInput, setContactEmailInput] = useState(contact.email);
-  const [contactPhoneInput, setContactPhoneInput] = useState(contact.phone);
-  const [contactHelpDeskInput, setContactHelpDeskInput] = useState(contact.helpDesk);
+  const [contactEmailInput, setContactEmailInput] = useState(contact.email || '');
+  const [contactPhoneInput, setContactPhoneInput] = useState(contact.phone || '');
+  const [contactHelpDeskInput, setContactHelpDeskInput] = useState(contact.helpDesk || '');
 
   const [faqs, setFaqs] = useState(
-    initialFaqs && initialFaqs.length > 0
-      ? initialFaqs
-      : [
-          { id: 'faq-1', q: 'Is this event completely free?', a: 'Yes, general admission is complimentary with advance pass registration.' },
-          { id: 'faq-2', q: 'How do I claim assistance?', a: 'Dedicated on-site volunteers and sign language interpreters will be stationed at Gate 2 and Registration Desk A.' }
-        ]
+    Array.isArray(initialFaqs) ? initialFaqs : []
   );
 
   // Inline adding states
@@ -226,9 +225,9 @@ export default function EventEligibilityScreen({
   // Inline Save Contact Channels
   const handleSaveContactInline = () => {
     setContact({
-      email: contactEmailInput.trim() || 'events@knotnex.org',
-      phone: contactPhoneInput.trim() || '+91 800-KNOTNEX',
-      helpDesk: contactHelpDeskInput.trim() || 'help@knotnex.org'
+      email: contactEmailInput.trim(),
+      phone: contactPhoneInput.trim(),
+      helpDesk: contactHelpDeskInput.trim()
     });
     setIsEditingContact(false);
     if (addToast) addToast('Contact channels updated!', 'success');
@@ -301,6 +300,11 @@ export default function EventEligibilityScreen({
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {rules.length === 0 && !isAddingRule && (
+                  <div style={{ fontSize: 12.5, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0' }}>
+                    No eligibility criteria specified yet. Click "+ Add Rule" to add guidelines.
+                  </div>
+                )}
                 {rules.map((rule, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, paddingBottom: 8, borderBottom: '1px solid #F1F5F9' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: '#334155', lineHeight: 1.5 }}>
@@ -362,6 +366,11 @@ export default function EventEligibilityScreen({
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {speakers.length === 0 && !isAddingSpeaker && (
+                  <div style={{ fontSize: 12.5, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0' }}>
+                    No speakers added yet. Click "+ Add Speaker" to feature keynote presenters.
+                  </div>
+                )}
                 {speakers.map(spk => (
                   <div key={spk.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -433,6 +442,11 @@ export default function EventEligibilityScreen({
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {sponsors.length === 0 && !isAddingSponsor && (
+                  <div style={{ fontSize: 12.5, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0' }}>
+                    No sponsors or partners added yet. Click "+ Add Sponsor" to include partners.
+                  </div>
+                )}
                 {sponsors.map(spn => (
                   <div key={spn.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -586,17 +600,17 @@ export default function EventEligibilityScreen({
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #6336EB, #4D25C9)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: organizer.name ? 'linear-gradient(135deg, #6336EB, #4D25C9)' : '#F1F5F9', color: organizer.name ? '#FFF' : '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800 }}>
                     {organizer.initials || 'ORG'}
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#1E1B4B', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {organizer.name}
+                    <div style={{ fontSize: 14, fontWeight: 700, color: organizer.name ? '#1E1B4B' : '#94A3B8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {organizer.name || 'Organization Name Not Set'}
                       {organizer.verified && (
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="#6336EB" stroke="#FFF" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="16 9 10 15 7 12"/></svg>
                       )}
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{organizer.subtitle}</div>
+                    <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>{organizer.subtitle || 'Click Edit to set organizing partner details'}</div>
                   </div>
                 </div>
               )}
@@ -742,15 +756,15 @@ export default function EventEligibilityScreen({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
                     <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>Email Organizer</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#1E1B4B', marginTop: 2 }}>{contact.email}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: contact.email ? '#1E1B4B' : '#94A3B8', marginTop: 2 }}>{contact.email || 'Not specified'}</div>
                   </div>
                   <div style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
                     <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>Call Organizer</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#1E1B4B', marginTop: 2 }}>{contact.phone}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: contact.phone ? '#1E1B4B' : '#94A3B8', marginTop: 2 }}>{contact.phone || 'Not specified'}</div>
                   </div>
                   <div style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9' }}>
                     <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600 }}>Help Desk</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#1E1B4B', marginTop: 2 }}>{contact.helpDesk}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: contact.helpDesk ? '#1E1B4B' : '#94A3B8', marginTop: 2 }}>{contact.helpDesk || 'Not specified'}</div>
                   </div>
                 </div>
               )}
@@ -797,6 +811,11 @@ export default function EventEligibilityScreen({
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {faqs.length === 0 && !isAddingFaq && (
+                  <div style={{ fontSize: 12.5, color: '#94A3B8', fontStyle: 'italic', padding: '6px 0' }}>
+                    No FAQs added yet. Click "+ Add FAQ" to provide helpful answers.
+                  </div>
+                )}
                 {faqs.map(faq => (
                   <div key={faq.id} style={{ padding: '12px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #F1F5F9', position: 'relative' }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#1E1B4B', paddingRight: 20 }}>{faq.q}</div>

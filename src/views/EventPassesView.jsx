@@ -220,7 +220,7 @@ export default function EventPassesView() {
               placeholder="Search pass ID, attendee, email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              width="360px"
+              width="320px"
             />
           </div>
         </div>

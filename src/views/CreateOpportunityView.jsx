@@ -1,30 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import BackButton from '../components/common/BackButton';
+import JobApplicationFormBuilder from './JobApplicationFormBuilder';
 
 const DEPARTMENT_OPTIONS = [
-  { value: 'Product & Design', label: 'Product & Design', icon: 'palette' },
-  { value: 'Engineering', label: 'Engineering', icon: 'terminal' },
-  { value: 'Community & Growth', label: 'Community & Growth', icon: 'groups' },
-  { value: 'Operations', label: 'Operations', icon: 'tune' },
-  { value: 'Marketing & Outreach', label: 'Marketing & Outreach', icon: 'campaign' }
+  { value: 'Product & Design', label: 'Product & Design' },
+  { value: 'Engineering', label: 'Engineering' },
+  { value: 'Community & Growth', label: 'Community & Growth' },
+  { value: 'Operations', label: 'Operations' },
+  { value: 'Marketing & Outreach', label: 'Marketing & Outreach' }
 ];
 
 const EMPLOYMENT_TYPE_OPTIONS = [
-  { value: 'Full-time', label: 'Full-time', icon: 'schedule' },
-  { value: 'Contract', label: 'Contract', icon: 'description' },
-  { value: 'Part-time', label: 'Part-time', icon: 'hourglass_bottom' },
-  { value: 'Fellowship', label: 'Fellowship', icon: 'school' },
-  { value: 'Internship', label: 'Internship', icon: 'explore' }
+  { value: 'Full-time', label: 'Full-time' },
+  { value: 'Contract', label: 'Contract' },
+  { value: 'Part-time', label: 'Part-time' },
+  { value: 'Fellowship', label: 'Fellowship' },
+  { value: 'Internship', label: 'Internship' }
 ];
 
 const PERK_OPTIONS = [
-  { id: 'health', icon: '🩺', label: 'Health Coverage' },
-  { id: 'remote', icon: '💻', label: 'Remote Setup Allowance' },
-  { id: 'budget', icon: '💵', label: '₹1,50,000 Learning Budget' },
-  { id: 'hours', icon: '⏰', label: 'Flexible Work Hours' },
-  { id: 'equity', icon: '📈', label: 'Equity / ESOPs' },
-  { id: 'wellness', icon: '🌿', label: 'Mental Wellness Days' }
+  { id: 'health', label: 'Health Coverage' },
+  { id: 'remote', label: 'Remote Setup Allowance' },
+  { id: 'budget', label: '₹1,50,000 Learning Budget' },
+  { id: 'hours', label: 'Flexible Work Hours' },
+  { id: 'equity', label: 'Equity / ESOPs' },
+  { id: 'wellness', label: 'Mental Wellness Days' }
 ];
 
 const DEFAULT_REQUIREMENTS = `• 4+ years leading design systems and WCAG AAA accessibility workflows.
@@ -36,7 +37,7 @@ const DEFAULT_REQUIREMENTS = `• 4+ years leading design systems and WCAG AAA a
  * Dropdown component mirroring the App Bar "+ Create" button dropdown layout:
  * - .appbar-dropdown-anchor wrapper
  * - .appbar-create-menu-dropdown card layout
- * - .appbar-menu-row item layout with .menu-icon-purple
+ * - .appbar-menu-row item layout
  */
 function AppbarStyleDropdown({ id, label, value, onChange, options }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -93,12 +94,7 @@ function AppbarStyleDropdown({ id, label, value, onChange, options }) {
             if (!isOpen) e.currentTarget.style.borderColor = '#DDE2E9';
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="material-symbols-outlined menu-icon-purple" style={{ fontSize: '18px' }}>
-              {selectedOption?.icon}
-            </span>
-            <span>{selectedOption?.label}</span>
-          </div>
+          <span>{selectedOption?.label}</span>
           <svg
             width="12"
             height="12"
@@ -150,15 +146,11 @@ function AppbarStyleDropdown({ id, label, value, onChange, options }) {
                     width: '100%',
                     background: isSelected ? '#F3EFFF' : undefined,
                     color: isSelected ? '#6336EB' : '#111827',
-                    fontWeight: isSelected ? 600 : 500
+                    fontWeight: isSelected ? 600 : 500,
+                    padding: '10px 14px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="material-symbols-outlined menu-icon-purple">
-                      {opt.icon}
-                    </span>
-                    <span>{opt.label}</span>
-                  </div>
+                  <span>{opt.label}</span>
                   {isSelected && (
                     <span
                       className="material-symbols-outlined"
@@ -178,30 +170,125 @@ function AppbarStyleDropdown({ id, label, value, onChange, options }) {
 }
 
 export default function CreateOpportunityView() {
-  const { navigateTo, addJob, showToast } = useApp();
-  const fileInputRef = useRef(null);
+  const { navigateTo, addJob, updateJob, showToast, editingJob } = useApp();
 
-  const [jobData, setJobData] = useState({
-    title: 'Senior Product Designer',
-    dept: 'Product & Design',
-    type: 'Full-time',
-    location: 'Remote (India / Global)',
-    salary: '$85,000 - $110,000 / yr',
-    experience: '3-5 Years',
-    desc: DEFAULT_REQUIREMENTS,
-    poster: ''
-  });
+  const [currentStep, setCurrentStep] = useState('details'); // 'details' | 'formBuilder'
 
-  const [selectedPerks, setSelectedPerks] = useState([
-    'health',
-    'remote',
-    'budget',
-    'hours',
-    'equity',
-    'wellness'
-  ]);
-  const [posterFileName, setPosterFileName] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
+  const [jobData, setJobData] = useState(() => ({
+    title: editingJob?.title || '',
+    dept: editingJob?.dept || 'Product & Design',
+    type: editingJob?.type || 'Full-time',
+    location: editingJob?.location || '',
+    salary: editingJob?.salary || '',
+    experience: editingJob?.experience || '',
+    desc: editingJob?.desc || '',
+    poster: editingJob?.poster || ''
+  }));
+
+  const [selectedPerks, setSelectedPerks] = useState(() => editingJob?.perks || []);
+
+  // Application Form Configuration State (matching Event Registration Form Builder)
+  const [resumeRequired, setResumeRequired] = useState(
+    () => editingJob?.formConfig?.resumeRequired ?? true
+  );
+  const [accommodationsEnabled, setAccommodationsEnabled] = useState(
+    () => editingJob?.formConfig?.accommodationsEnabled ?? true
+  );
+  const [accommodations, setAccommodations] = useState(
+    () =>
+      editingJob?.formConfig?.accommodations || [
+        { id: 'acc-1', label: 'Wheelchair Desk & Step-Free Workspace', checked: true },
+        { id: 'acc-2', label: 'Indian Sign Language (ISL) Interpreter', checked: true },
+        { id: 'acc-3', label: 'Screen Reader & Tactile / Braille Materials', checked: true },
+        { id: 'acc-4', label: 'Assistive Transport & Dedicated Parking', checked: true },
+        { id: 'acc-5', label: 'Quiet / Low-Sensory Interview Room', checked: true },
+        { id: 'acc-6', label: 'Flexible Schedule / Neurodivergent Support', checked: true }
+      ]
+  );
+
+  const [customQuestions, setCustomQuestions] = useState(
+    () =>
+      editingJob?.formConfig?.customQuestions || [
+        { id: 'cq-1', title: 'Years of relevant experience in this domain', type: 'SHORT TEXT', required: true, hint: 'e.g. 4+ years' },
+        { id: 'cq-2', title: 'Portfolio / GitHub / Work Samples URL', type: 'SHORT TEXT', required: true, hint: 'https://...' },
+        { id: 'cq-3', title: 'Notice period / Earliest available start date', type: 'DROPDOWN', required: false, hint: 'Choices: Immediate, 15 days, 30 days, 60 days' }
+      ]
+  );
+
+  const [instantConfirmation, setInstantConfirmation] = useState(
+    () => editingJob?.formConfig?.instantConfirmation ?? true
+  );
+  const [capApplications, setCapApplications] = useState(
+    () => editingJob?.formConfig?.capApplications ?? false
+  );
+  const [applicationLimit, setApplicationLimit] = useState(
+    () => editingJob?.formConfig?.applicationLimit || '50'
+  );
+
+  const changeStep = (nextStep) => {
+    const resetScroll = () => {
+      const mainArea = document.getElementById('mainContentArea');
+      if (mainArea) mainArea.scrollTop = 0;
+      window.scrollTo(0, 0);
+    };
+    resetScroll();
+    setCurrentStep(nextStep);
+    requestAnimationFrame(resetScroll);
+    setTimeout(resetScroll, 50);
+  };
+
+  useEffect(() => {
+    const resetScroll = () => {
+      const mainArea = document.getElementById('mainContentArea');
+      if (mainArea) mainArea.scrollTop = 0;
+      window.scrollTo(0, 0);
+    };
+    resetScroll();
+    requestAnimationFrame(resetScroll);
+    const t = setTimeout(resetScroll, 50);
+    return () => clearTimeout(t);
+  }, [currentStep]);
+
+  useEffect(() => {
+    if (editingJob) {
+      setJobData({
+        title: editingJob.title || '',
+        dept: editingJob.dept || 'Product & Design',
+        type: editingJob.type || 'Full-time',
+        location: editingJob.location || '',
+        salary: editingJob.salary || '',
+        experience: editingJob.experience || '',
+        desc: editingJob.desc || '',
+        poster: editingJob.poster || ''
+      });
+      setSelectedPerks(editingJob.perks || []);
+      if (editingJob.formConfig) {
+        setResumeRequired(editingJob.formConfig.resumeRequired ?? true);
+        setAccommodationsEnabled(editingJob.formConfig.accommodationsEnabled ?? true);
+        if (editingJob.formConfig.accommodations) {
+          setAccommodations(editingJob.formConfig.accommodations);
+        }
+        if (editingJob.formConfig.customQuestions) {
+          setCustomQuestions(editingJob.formConfig.customQuestions);
+        }
+        setInstantConfirmation(editingJob.formConfig.instantConfirmation ?? true);
+        setCapApplications(editingJob.formConfig.capApplications ?? false);
+        setApplicationLimit(editingJob.formConfig.applicationLimit || '50');
+      }
+    } else {
+      setJobData({
+        title: '',
+        dept: 'Product & Design',
+        type: 'Full-time',
+        location: '',
+        salary: '',
+        experience: '',
+        desc: '',
+        poster: ''
+      });
+      setSelectedPerks([]);
+    }
+  }, [editingJob]);
 
   const togglePerk = (id) => {
     setSelectedPerks((prev) =>
@@ -209,574 +296,385 @@ export default function CreateOpportunityView() {
     );
   };
 
-  const handleImageFile = (file) => {
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      showToast('Please upload an image file (PNG, JPG, SVG, WebP)', 'warning');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('File size must be under 5MB', 'warning');
-      return;
-    }
-    setPosterFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setJobData((prev) => ({ ...prev, poster: e.target?.result }));
-      showToast('Banner image uploaded successfully', 'success');
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFileInputChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleImageFile(file);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      handleImageFile(file);
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handlePublish = () => {
+  const handlePublish = (customFormConfig) => {
     if (!jobData.title?.trim()) {
       showToast('Please enter a role title', 'warning');
+      changeStep('details');
       return;
     }
-    addJob({
+
+    const resolvedFormConfig = customFormConfig || {
+      resumeRequired,
+      accommodationsEnabled,
+      accommodations: accommodationsEnabled ? accommodations.filter((a) => a.checked) : [],
+      customQuestions,
+      instantConfirmation,
+      capApplications,
+      applicationLimit
+    };
+
+    const newJob = {
+      ...(editingJob || {}),
+      id: editingJob?.id || `job-${Date.now()}`,
       ...jobData,
-      perks: selectedPerks
-    });
+      title: jobData.title.trim(),
+      dept: jobData.dept || 'Product & Design',
+      type: jobData.type || 'Full-time',
+      location: jobData.location.trim() || 'Remote',
+      salary: jobData.salary.trim() || 'Competitive',
+      experience: jobData.experience.trim() || 'Not specified',
+      desc: jobData.desc.trim(),
+      perks: selectedPerks,
+      status: editingJob?.status || 'active',
+      posted: editingJob?.posted || 'Just now',
+      applicantsCount: editingJob?.applicantsCount || 0,
+      formConfig: resolvedFormConfig
+    };
+
+    if (editingJob && updateJob) {
+      updateJob(editingJob.id, newJob);
+      showToast(`Opportunity "${newJob.title}" updated successfully!`, 'success');
+    } else {
+      addJob(newJob);
+      showToast(`Opportunity "${newJob.title}" published successfully!`, 'success');
+    }
     navigateTo('careers');
   };
 
-  return (
-    <section className="app-view active" id="viewCreateOpportunity">
-      {/* Top Header: Back Button alone */}
-      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
-        <BackButton
-          id="btnBackToCareersFromCreate"
-          onClick={() => navigateTo('careers')}
-        />
-      </div>
+  // Step 2: Form Builder screen (Matching Event Registration Form Builder)
+  if (currentStep === 'formBuilder') {
+    return (
+      <JobApplicationFormBuilder
+        jobData={jobData}
+        initialFormConfig={{
+          resumeRequired,
+          accommodationsEnabled,
+          accommodations,
+          customQuestions,
+          instantConfirmation,
+          capApplications,
+          applicationLimit
+        }}
+        onPublishComplete={(newConfig) => handlePublish(newConfig)}
+        onBackToDetails={() => changeStep('details')}
+        showToast={showToast}
+      />
+    );
+  }
 
-      {/* Main Single Column Form Container */}
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 80px)', position: 'relative' }}>
+      <section className="app-view active" id="viewCreateOpportunity" style={{ paddingBottom: '32px', flex: 1 }}>
+        {/* Top Header: Back Button alone */}
+        <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
+          <BackButton
+            id="btnBackToCareersFromCreate"
+            onClick={() => navigateTo('careers')}
+          />
+        </div>
+
+      {/* Main Container */}
       <div
         className="create-opportunity-container"
         style={{
-          maxWidth: '860px',
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px'
+          gap: '24px'
         }}
       >
-        {/* Card 1: Role & Position Details */}
-        <div className="studio-card" style={{ overflow: 'visible' }}>
-          <div
-            className="studio-card-header"
-            style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}
-          >
-            <div className="studio-card-icon-box">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="2" y="7" width="20" height="14" rx="2" />
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="studio-card-title">Role &amp; Position Details</h3>
-              <p className="studio-card-desc">Specify the title, work mode, department and compensation for this opening</p>
-            </div>
-          </div>
-
-          <div className="studio-card-body">
-            <div className="form-group">
-              <label className="form-label" htmlFor="inpJobTitle">
-                Role Title <span className="required-star">*</span>
-              </label>
-              <input
-                type="text"
-                className="form-input form-input-lg"
-                id="inpJobTitle"
-                placeholder="e.g. Senior Product Designer"
-                value={jobData.title}
-                onChange={(e) => setJobData({ ...jobData, title: e.target.value })}
-              />
+        {/* Top: 2-Column Grid for Role Details & Requirements */}
+        <div
+          style={{
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
+            gap: '24px',
+            alignItems: 'start'
+          }}
+        >
+          {/* Left Column: Role & Position Details */}
+          <div className="studio-card" style={{ overflow: 'visible', display: 'flex', flexDirection: 'column' }}>
+            <div
+              className="studio-card-header"
+              style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}
+            >
+              <div className="studio-card-icon-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" />
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="studio-card-title">Role &amp; Position Details</h3>
+                <p className="studio-card-desc">Specify the title, work mode, department and compensation for this opening</p>
+              </div>
             </div>
 
-            {/* Department and Employment Type Dropdowns styled like App Bar Create button */}
-            <div className="form-row-2">
-              <AppbarStyleDropdown
-                id="inpJobDept"
-                label="Department"
-                value={jobData.dept}
-                onChange={(val) => setJobData({ ...jobData, dept: val })}
-                options={DEPARTMENT_OPTIONS}
-              />
-
-              <AppbarStyleDropdown
-                id="inpJobType"
-                label="Employment Type"
-                value={jobData.type}
-                onChange={(val) => setJobData({ ...jobData, type: val })}
-                options={EMPLOYMENT_TYPE_OPTIONS}
-              />
-            </div>
-
-            <div className="form-row-2">
+            <div className="studio-card-body" style={{ padding: '22px', gap: '16px' }}>
               <div className="form-group">
-                <label className="form-label" htmlFor="inpJobLocation">Work Location</label>
+                <label className="form-label" htmlFor="inpJobTitle">
+                  Role Title <span className="required-star">*</span>
+                </label>
                 <input
                   type="text"
-                  className="form-input"
-                  id="inpJobLocation"
-                  value={jobData.location}
-                  onChange={(e) => setJobData({ ...jobData, location: e.target.value })}
+                  className="form-input form-input-lg"
+                  id="inpJobTitle"
+                  placeholder="e.g. Senior Product Designer"
+                  value={jobData.title}
+                  onChange={(e) => setJobData({ ...jobData, title: e.target.value })}
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="inpJobSalary">Compensation</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  id="inpJobSalary"
-                  value={jobData.salary}
-                  onChange={(e) => setJobData({ ...jobData, salary: e.target.value })}
+              {/* Department and Employment Type Dropdowns */}
+              <div className="form-row-2">
+                <AppbarStyleDropdown
+                  id="inpJobDept"
+                  label="Department"
+                  value={jobData.dept}
+                  onChange={(val) => setJobData({ ...jobData, dept: val })}
+                  options={DEPARTMENT_OPTIONS}
+                />
+
+                <AppbarStyleDropdown
+                  id="inpJobType"
+                  label="Employment Type"
+                  value={jobData.type}
+                  onChange={(val) => setJobData({ ...jobData, type: val })}
+                  options={EMPLOYMENT_TYPE_OPTIONS}
                 />
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Card 2: Hiring Poster Banner (Upload Image) */}
-        <div className="studio-card">
-          <div className="studio-card-header">
-            <div className="studio-card-icon-box">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="studio-card-title">Hiring Poster Banner</h3>
-              <p className="studio-card-desc">Upload a banner image that highlights this role on Knotnex</p>
-            </div>
-          </div>
-
-          <div className="studio-card-body">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFileInputChange}
-            />
-
-            {jobData.poster ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    height: '180px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    border: '1px solid #E5E7EB',
-                    background: '#F8FAFC'
-                  }}
-                >
-                  <img
-                    src={jobData.poster}
-                    alt="Hiring Poster"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              <div className="form-row-2">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="inpJobLocation">Work Location</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    id="inpJobLocation"
+                    placeholder="e.g. Remote (India / Global)"
+                    value={jobData.location}
+                    onChange={(e) => setJobData({ ...jobData, location: e.target.value })}
                   />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '12px',
-                      right: '12px',
-                      display: 'flex',
-                      gap: '8px'
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid #D1D5DB',
-                        borderRadius: '8px',
-                        padding: '6px 14px',
-                        fontSize: '12.5px',
-                        fontWeight: 600,
-                        color: '#111827',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                      <span>Change Image</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setJobData((prev) => ({ ...prev, poster: '' }));
-                        setPosterFileName('');
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid #FEE2E2',
-                        borderRadius: '8px',
-                        padding: '6px 12px',
-                        fontSize: '12.5px',
-                        fontWeight: 600,
-                        color: '#DC2626',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                      <span>Remove</span>
-                    </button>
-                  </div>
                 </div>
-                {posterFileName && (
-                  <div style={{ fontSize: '12.5px', color: '#4B5563', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#12B76A" strokeWidth="2.5">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span style={{ fontWeight: 500 }}>{posterFileName}</span>
-                  </div>
-                )}
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="inpJobSalary">Compensation</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    id="inpJobSalary"
+                    placeholder="e.g. ₹15,00,000 - ₹22,00,000 / yr"
+                    value={jobData.salary}
+                    onChange={(e) => setJobData({ ...jobData, salary: e.target.value })}
+                  />
+                </div>
               </div>
-            ) : (
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="inpJobExperience">Experience Required</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  id="inpJobExperience"
+                  placeholder="e.g. 3-5 Years"
+                  value={jobData.experience}
+                  onChange={(e) => setJobData({ ...jobData, experience: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Requirements & Perks */}
+          <div className="studio-card" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="studio-card-header">
               <div
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
                 style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(99, 54, 235, 0.08)',
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '12px',
-                  padding: '36px 20px',
-                  borderRadius: '12px',
-                  border: isDragging ? '2px dashed #6336EB' : '1.5px dashed #D1D5DB',
-                  background: isDragging ? '#F5F3FF' : '#FAFAFB',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textAlign: 'center'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isDragging) {
-                    e.currentTarget.style.borderColor = '#6336EB';
-                    e.currentTarget.style.background = '#FAF8FF';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isDragging) {
-                    e.currentTarget.style.borderColor = '#D1D5DB';
-                    e.currentTarget.style.background = '#FAFAFB';
-                  }
+                  color: '#6336EB',
+                  flexShrink: 0
                 }}
               >
-                <div
-                  style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '50%',
-                    background: 'rgba(99, 54, 235, 0.08)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#6336EB'
-                  }}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <line x1="10" y1="9" x2="8" y2="9" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="studio-card-title">
+                  Requirements &amp; Perks
+                </h3>
+                <p className="studio-card-desc">
+                  Detail responsibilities, core technical skills, and candidate perks
+                </p>
+              </div>
+            </div>
+
+            <div className="studio-card-body" style={{ padding: '22px', gap: '20px', flex: 1 }}>
+              {/* Field: Requirements & Qualifications */}
+              <div className="form-group">
+                <label
+                  htmlFor="inpJobRequirements"
+                  className="form-label"
+                  style={{ marginBottom: '8px' }}
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
-                    Click or drag to upload poster image
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
-                    Supports SVG, PNG, JPG, or WebP
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  id="btnUploadPosterImage"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fileInputRef.current?.click();
-                  }}
+                  Requirements &amp; Qualifications <span className="required-star">*</span>
+                </label>
+                <textarea
+                  id="inpJobRequirements"
+                  className="studio-card-textarea"
+                  rows={6}
+                  value={jobData.desc}
+                  onChange={(e) => setJobData({ ...jobData, desc: e.target.value })}
+                  placeholder="Detail requirements, qualifications & key responsibilities..."
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 18px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#6336EB',
+                    width: '100%',
+                    minHeight: '140px',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid #DDE2E9',
                     background: '#FFFFFF',
-                    border: '1.5px solid #C4B5FD',
-                    borderRadius: '9999px',
-                    cursor: 'pointer',
-                    marginTop: '4px',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                    transition: 'all 0.15s ease'
+                    fontSize: '13px',
+                    lineHeight: 1.6,
+                    color: '#1E293B',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#F5F3FF';
-                    e.currentTarget.style.borderColor = '#6336EB';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#FFFFFF';
-                    e.currentTarget.style.borderColor = '#C4B5FD';
-                  }}
+                />
+              </div>
+
+              {/* Field: Offered Benefits & Perks */}
+              <div className="form-group">
+                <label
+                  className="form-label"
+                  style={{ marginBottom: '8px' }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <span>Upload Image</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Card 3: Requirements & Perks (Matching user's reference image) */}
-        <div className="studio-card">
-          <div className="studio-card-header">
-            <div
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '12px',
-                background: '#F3EFFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#6336EB',
-                flexShrink: 0
-              }}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <line x1="10" y1="9" x2="8" y2="9" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="studio-card-title" style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: '0 0 3px 0' }}>
-                Requirements &amp; Perks
-              </h3>
-              <p className="studio-card-desc" style={{ fontSize: '13px', color: '#6B7280', margin: 0 }}>
-                Detail responsibilities, core technical skills, and candidate perks
-              </p>
-            </div>
-          </div>
-
-          <div className="studio-card-body" style={{ padding: '24px', gap: '22px' }}>
-            {/* Field: Requirements & Qualifications */}
-            <div className="form-group">
-              <label
-                htmlFor="inpJobRequirements"
-                style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: '#1E293B',
-                  marginBottom: '10px'
-                }}
-              >
-                Requirements &amp; Qualifications <span style={{ color: '#EF4444', fontWeight: 600 }}>*</span>
-              </label>
-              <textarea
-                id="inpJobRequirements"
-                className="studio-card-textarea"
-                rows={5}
-                value={jobData.desc}
-                onChange={(e) => setJobData({ ...jobData, desc: e.target.value })}
-                placeholder="Detail requirements & qualifications..."
-                style={{
-                  width: '100%',
-                  minHeight: '130px',
-                  padding: '14px 16px',
-                  borderRadius: '12px',
-                  border: '1px solid #DDE2E9',
-                  background: '#FFFFFF',
-                  fontSize: '13.5px',
-                  lineHeight: 1.65,
-                  color: '#1E293B',
-                  resize: 'vertical',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-
-            {/* Field: Offered Benefits & Perks */}
-            <div className="form-group">
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: '#1E293B',
-                  marginBottom: '10px'
-                }}
-              >
-                Offered Benefits &amp; Perks (Click to toggle)
-              </label>
-              <div className="perks-toggle-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                {PERK_OPTIONS.map((perk) => {
-                  const isSelected = selectedPerks.includes(perk.id);
-                  return (
-                    <button
-                      key={perk.id}
-                      type="button"
-                      className={`perk-toggle-pill ${isSelected ? 'active' : 'inactive'}`}
-                      onClick={() => togglePerk(perk.id)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 18px',
-                        borderRadius: '9999px',
-                        fontSize: '13px',
-                        fontWeight: 550,
-                        background: isSelected ? '#FFFFFF' : '#F9FAFB',
-                        border: isSelected ? '1.5px solid #6336EB' : '1.5px solid #E2E8F0',
-                        color: isSelected ? '#4F46E5' : '#64748B',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        userSelect: 'none'
-                      }}
-                    >
-                      <span style={{ fontSize: '14px' }}>{perk.icon}</span>
-                      <span>{perk.label}</span>
-                    </button>
-                  );
-                })}
+                  Offered Benefits &amp; Perks (Click to toggle)
+                </label>
+                <div className="perks-toggle-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {PERK_OPTIONS.map((perk) => {
+                    const isSelected = selectedPerks.includes(perk.id);
+                    return (
+                      <button
+                        key={perk.id}
+                        type="button"
+                        className={`perk-toggle-pill ${isSelected ? 'active' : 'inactive'}`}
+                        onClick={() => togglePerk(perk.id)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '7px 16px',
+                          borderRadius: '9999px',
+                          fontSize: '12.5px',
+                          fontWeight: 550,
+                          background: isSelected ? '#FFFFFF' : '#F9FAFB',
+                          border: isSelected ? '1.5px solid #6336EB' : '1.5px solid #E2E8F0',
+                          color: isSelected ? '#4F46E5' : '#64748B',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          userSelect: 'none'
+                        }}
+                      >
+                        <span>{perk.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Footer Actions Matching Reference Image */}
-          <div
-            className="studio-card-footer"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              gap: '12px',
-              padding: '20px 24px',
-              borderTop: '1px solid #F3F4F6',
-              background: '#FFFFFF',
-              borderRadius: '0 0 16px 16px'
-            }}
-          >
-            <button
-              type="button"
-              id="btnCancelOpportunity"
-              onClick={() => navigateTo('careers')}
-              style={{
-                height: '42px',
-                padding: '0 24px',
-                borderRadius: '9999px',
-                background: '#FFFFFF',
-                border: '1.5px solid #E5E7EB',
-                color: '#374151',
-                fontSize: '13.5px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#D1D5DB';
-                e.currentTarget.style.background = '#F9FAFB';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#E5E7EB';
-                e.currentTarget.style.background = '#FFFFFF';
-              }}
-            >
-              Cancel &amp; Discard
-            </button>
-
-            <button
-              type="button"
-              id="btnPublishOpportunity"
-              onClick={handlePublish}
-              style={{
-                height: '42px',
-                padding: '0 26px',
-                borderRadius: '9999px',
-                background: '#6336EB',
-                border: 'none',
-                color: '#FFFFFF',
-                fontSize: '13.5px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(99, 54, 235, 0.3)',
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#5528DA';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 54, 235, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#6336EB';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(99, 54, 235, 0.3)';
-              }}
-            >
-              Publish Opportunity
-            </button>
           </div>
         </div>
       </div>
     </section>
+
+      {/* Sticky Bottom Bar: Cancel & Discard on left, Next: Registration Form on right */}
+      <div
+        style={{
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 50,
+          background: 'rgba(255, 255, 255, 0.98)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderTop: '1px solid #E2E8F0',
+          padding: '14px 32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.06)',
+          boxSizing: 'border-box',
+          width: '100%'
+        }}
+      >
+        <button
+          type="button"
+          id="btnCancelOpportunity"
+          onClick={() => navigateTo('careers')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '40px',
+            padding: '0 20px',
+            borderRadius: '10px',
+            background: '#FFFFFF',
+            border: '1.5px solid #E2E8F0',
+            color: '#1E1B4B',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = '#6336EB';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = '#E2E8F0';
+          }}
+        >
+          Cancel &amp; Discard
+        </button>
+
+        <button
+          type="button"
+          id="btnNextToAppForm"
+          onClick={() => changeStep('formBuilder')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            height: '40px',
+            padding: '0 26px',
+            borderRadius: '10px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #6336EB, #4D25C9)',
+            color: '#FFFFFF',
+            fontSize: '13.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(99, 54, 235, 0.25)',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+        >
+          <span>Next: Registration Form</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M5 12h14" />
+            <path d="M12 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
   );
 }

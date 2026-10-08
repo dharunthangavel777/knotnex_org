@@ -1108,7 +1108,9 @@ html, body {
 .filter-right-controls {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: 0;
+  margin-left: auto;
+  margin-right: 0;
 }
 
 .search-input-wrapper {
@@ -2112,36 +2114,51 @@ html, body {
 .toast-container {
   position: fixed;
   bottom: 24px;
-  right: 24px;
-  z-index: 1000;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
   pointer-events: none;
+  max-width: calc(100vw - 32px);
 }
 
 .toast {
   pointer-events: auto;
-  background-color: var(--neutral-900);
+  background-color: #0F172A;
   color: #ffffff;
-  padding: 12px 18px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  font-size: 13px;
+  padding: 11px 18px;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13.5px;
   font-weight: var(--font-weight-medium);
   display: flex;
   align-items: center;
-  gap: 10px;
-  animation: toastIn 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 12px;
+  animation: toastBottomPop 220ms cubic-bezier(0.16, 1, 0.3, 1);
   min-width: 280px;
+  max-width: 90vw;
 }
 
 .toast.success {
-  background-color: #027a48;
+  background-color: #0F172A;
 }
 
 .toast.info {
-  background-color: var(--brand-600);
+  background-color: #0F172A;
+}
+
+@keyframes toastBottomPop {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes toastIn {
@@ -2660,6 +2677,7 @@ html, body {
   align-items: center;
   max-width: 680px;
   margin: 0 auto;
+  transform: translateX(-24px);
 }
 
 .appbar-search-pill {
@@ -3739,8 +3757,9 @@ html, body {
 .recent-act-top-right-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0;
   margin-left: auto;
+  margin-right: 0;
   flex-shrink: 0;
   flex-wrap: nowrap;
 }
@@ -4061,10 +4080,18 @@ html, body {
   min-width: 980px;
 }
 
-#ticketsTable {
+#ticketsTable,
+#ticketsTableSkeleton {
   width: 100% !important;
   min-width: 0 !important;
   table-layout: fixed !important;
+}
+
+#ticketsTable th.col-right,
+#ticketsTable td.col-right,
+#ticketsTableSkeleton th.col-right,
+#ticketsTableSkeleton td.col-right {
+  padding-right: 84px !important;
 }
 
 .table-responsive-wrapper,
@@ -4131,7 +4158,7 @@ div[style*="overflow-x: auto"]::-webkit-scrollbar {
 .recent-products-table th.col-right,
 .recent-products-table td.col-right {
   text-align: right !important;
-  padding-right: 24px !important;
+  padding-right: 48px !important;
 }
 
 /* Event Table Icon & Poster Wraps */
@@ -8202,10 +8229,14 @@ tbody tr.skeleton-table-row { animation: none; }
     font-size: 12px !important;
   }
 
-  .toast {
-    left: 16px !important;
-    right: 16px !important;
+  .toast-container {
     bottom: 16px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+  .toast {
     max-width: calc(100vw - 32px) !important;
   }
 }
@@ -8870,8 +8901,9 @@ tbody tr.skeleton-table-row { animation: none; }
 .attendee-console-actions {
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 0 !important;
   margin-left: auto !important;
+  margin-right: 0 !important;
   flex-shrink: 0 !important;
   flex-wrap: nowrap !important;
 }
@@ -13650,16 +13682,31 @@ div[style*="overflowX:auto"] {
 
 /* ==========================================================================
    UNIFIED PROFESSIONAL KNOTNEX SEARCH BAR COMPONENT
-   Standardized across App Bar, Tables, and All Views with Smooth Expansion Animation
+   Standardized across App Bar, Tables, and All Views
+   Features Symmetrical Both-Sides Expansion Animation & Left-Offset Positioning
    ========================================================================== */
-.knotnex-search-bar {
-  --base-width: 360px;
-  --expand-width: 500px;
+.knotnex-search-wrapper {
+  --base-width: 320px;
+  --expand-width: 370px;
+  --side-growth: calc((var(--expand-width) - var(--base-width)) / 2);
+  position: relative;
   display: inline-flex;
   align-items: center;
-  position: relative;
+  justify-content: center;
   width: var(--base-width);
-  max-width: 100%;
+  height: 40px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  margin-right: calc(var(--side-growth) + 16px);
+}
+
+.knotnex-search-bar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--base-width);
+  max-width: 90vw;
   height: 40px;
   background-color: #FFFFFF;
   border: 1px solid #DDE2E9;
@@ -13667,26 +13714,45 @@ div[style*="overflowX:auto"] {
   padding: 0 36px 0 38px;
   box-sizing: border-box;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-  flex-shrink: 0;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.2s ease, 
+              box-shadow 0.2s ease, 
+              background-color 0.2s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  cursor: text;
 }
 
+.knotnex-search-wrapper:hover .knotnex-search-bar,
 .knotnex-search-bar:hover {
   border-color: #CBD5E1;
   background-color: #FFFFFF;
 }
 
+.knotnex-search-wrapper:focus-within .knotnex-search-bar,
 .knotnex-search-bar:focus-within {
   width: var(--expand-width) !important;
-  max-width: 100%;
   background-color: #FFFFFF !important;
   border-color: #94A3B8 !important;
-  box-shadow: 0 0 0 3.5px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 0 0 3.5px rgba(15, 23, 42, 0.07), 0 3px 12px rgba(0, 0, 0, 0.06) !important;
+  z-index: 25;
+}
+
+.appbar-center-search .knotnex-search-wrapper {
+  --base-width: 480px;
+  --expand-width: 525px;
+  margin-right: 0 !important;
 }
 
 .appbar-center-search .knotnex-search-bar {
-  --base-width: 420px;
-  --expand-width: 560px;
+  padding-left: 44px;
+}
+
+.appbar-center-search .knotnex-search-icon {
+  width: 18px;
+  height: 18px;
+  left: 15px;
 }
 
 .knotnex-search-icon {
@@ -13700,6 +13766,7 @@ div[style*="overflowX:auto"] {
   transition: color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.knotnex-search-wrapper:focus-within .knotnex-search-icon,
 .knotnex-search-bar:focus-within .knotnex-search-icon {
   color: #475569;
   transform: translateY(-50%) scale(1.08);
@@ -13754,10 +13821,40 @@ div[style*="overflowX:auto"] {
   display: none !important;
 }
 
+/* Companion action buttons remain completely STATIC (no sliding/displacement) */
+.btn-see-more-pill,
+.sheets-console-actions .circle-action-btn,
+.sheets-console-actions .btn-primary,
+.sheets-console-actions .btn-secondary {
+  transform: none !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+@media (max-width: 900px) {
+  .sheets-console-actions,
+  .attendee-console-actions,
+  .recent-act-top-right-group,
+  .filter-right-controls {
+    margin-right: 0 !important;
+  }
+}
+
 @media (max-width: 768px) {
-  .knotnex-search-bar {
+  .knotnex-search-wrapper {
     width: 100% !important;
     max-width: 100% !important;
+    margin-right: 0 !important;
+  }
+  .knotnex-search-bar {
+    position: static !important;
+    transform: none !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .appbar-center-search {
+    transform: none !important;
   }
 }
 

@@ -257,7 +257,7 @@ export default function DashboardView() {
                 placeholder="Search recent jobs, events, schemes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                width="340px"
+                width="320px"
               />
 
               <button

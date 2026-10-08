@@ -531,7 +531,7 @@ export default function CareerDetailsView() {
                 placeholder="Search attendees by name, email, phone (+91), tick"
                 value={candidateSearch}
                 onChange={(e) => setCandidateSearch(e.target.value)}
-                width="380px"
+                width="340px"
               />
             </div>
           </div>

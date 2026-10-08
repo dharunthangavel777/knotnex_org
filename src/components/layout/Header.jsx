@@ -18,18 +18,13 @@ export default function Header() {
     setIsMobileSidebarOpen
   } = useApp();
 
-  const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
   const notifRef = useRef(null);
-  const createRef = useRef(null);
 
   // Close menus on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
         setIsNotifOpen(false);
-      }
-      if (createRef.current && !createRef.current.contains(e.target)) {
-        setCreateDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -67,62 +62,13 @@ export default function Header() {
           placeholder="Search events, jobs, schemes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          width="420px"
+          width="480px"
+          expandWidth="525px"
         />
       </div>
 
       {/* Right: Actions Cluster matching screenshot */}
       <div className="appbar-right-actions">
-        {/* + Create ⌄ Button */}
-        <div className="appbar-dropdown-anchor" ref={createRef}>
-          <button
-            className="appbar-create-btn"
-            id="btnTopHeaderCreate"
-            title="Create New"
-            onClick={() => setCreateDropdownOpen(!createDropdownOpen)}
-          >
-            <span style={{ fontSize: '15px', fontWeight: 500, marginRight: '2px' }}>+</span>
-            <span>Create</span>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: '4px' }}>
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-
-          {createDropdownOpen && (
-            <div className="appbar-create-menu-dropdown">
-              <button
-                className="appbar-menu-row"
-                onClick={() => {
-                  setCreateDropdownOpen(false);
-                  navigateTo('createEvent');
-                }}
-              >
-                <span className="material-symbols-outlined menu-icon-purple">event</span>
-                <span>New Event</span>
-              </button>
-              <button
-                className="appbar-menu-row"
-                onClick={() => {
-                  setCreateDropdownOpen(false);
-                  navigateTo('createOpportunity');
-                }}
-              >
-                <span className="material-symbols-outlined menu-icon-purple">work</span>
-                <span>New Opportunity</span>
-              </button>
-              <button
-                className="appbar-menu-row"
-                onClick={() => {
-                  setCreateDropdownOpen(false);
-                  navigateTo('createScheme');
-                }}
-              >
-                <span className="material-symbols-outlined menu-icon-purple">account_balance</span>
-                <span>New Grant Scheme</span>
-              </button>
-            </div>
-          )}
-        </div>
 
         {/* Circular Notification Bell Button */}
         <div className="appbar-dropdown-anchor" id="topNotificationsWrapper" ref={notifRef}>

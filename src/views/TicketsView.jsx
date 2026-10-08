@@ -155,7 +155,7 @@ export default function TicketsView() {
               placeholder="Search ticket ID, user, txn ref, event..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              width="360px"
+              width="320px"
             />
             <button
               className="circle-action-btn"
@@ -191,30 +191,30 @@ export default function TicketsView() {
           ) : (
             <table className="recent-products-table" id="ticketsTable" style={{ width: '100%', tableLayout: 'fixed' }}>
             <colgroup>
-              <col style={{ width: '44px' }} />
-              <col style={{ width: '125px' }} />
-              <col style={{ width: '160px' }} />
-              <col style={{ width: '160px' }} />
-              <col />
-              <col style={{ width: '90px' }} />
-              <col style={{ width: '100px' }} />
+              <col style={{ width: '48px' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '18%' }} />
+              <col style={{ width: '18%' }} />
+              <col style={{ width: '25%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '14%' }} />
             </colgroup>
             <thead>
               <tr>
-                <th className="col-center" style={{ width: '44px', color: 'var(--neutral-400)', fontSize: '11px' }}>#</th>
+                <th className="col-center" style={{ width: '48px', color: 'var(--neutral-400)', fontSize: '11px' }}>#</th>
                 <th>Ticket &amp; Priority</th>
                 <th>Raised By (User)</th>
                 <th>Category &amp; Event</th>
                 <th>Issue Description</th>
-                <th>Amount</th>
-                <th style={{ textAlign: 'center' }}>Action</th>
+                <th style={{ paddingLeft: '36px' }}>Amount</th>
+                <th className="col-right">Action</th>
               </tr>
             </thead>
             <tbody id="ticketsTableBody">
               {filtered.map((t, idx) => {
                 const txnId = t.txnId || t.paymentRef || `TXN-${8400 + idx + 1}-HDFC`;
                 return (
-                  <tr key={t.id || idx}>
+                  <tr key={t.id || idx} style={{ cursor: 'pointer' }} onClick={() => openModal('modalTicketIssueDetails', { ...t, txnId })}>
                     <td className="col-center" style={{ color: 'var(--neutral-400)', fontWeight: 600, fontSize: '12px' }}>
                       {(idx + 1).toString().padStart(2, '0')}
                     </td>
@@ -282,29 +282,19 @@ export default function TicketsView() {
                         {t.desc || t.details || t.description || 'Registration pass confirmation email not received'}
                       </div>
                     </td>
-                    <td style={{ fontSize: '12.5px', fontWeight: 600, color: '#111827', verticalAlign: 'middle' }}>
+                    <td style={{ fontSize: '12.5px', fontWeight: 600, color: '#111827', verticalAlign: 'middle', paddingLeft: '36px' }}>
                       {t.amount || '—'}
                     </td>
-                    <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                      <button
-                        className="btn-secondary"
-                        style={{
-                          height: '30px',
-                          padding: '0 12px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px'
-                        }}
-                        onClick={() => openModal('modalTicketIssueDetails', { ...t, txnId })}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                        <span>View</span>
-                      </button>
+                    <td className="col-right" onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        <button
+                          className="btn-secondary"
+                          style={{ height: '32px', padding: '0 14px', fontSize: '12px', fontWeight: 600 }}
+                          onClick={() => openModal('modalTicketIssueDetails', { ...t, txnId })}
+                        >
+                          View
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

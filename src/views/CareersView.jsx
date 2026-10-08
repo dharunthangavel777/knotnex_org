@@ -243,7 +243,7 @@ export default function CareersView() {
               placeholder={activeTab === 'jobs' ? "Search roles, departments, categories..." : "Search candidates, roles..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              width="360px"
+              width="320px"
             />
             <button
               className="circle-action-btn"
@@ -312,7 +312,7 @@ export default function CareersView() {
                   <th>Location &amp; Type</th>
                   <th>Applicants</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right', paddingRight: '44px' }}>Action</th>
+                  <th className="col-right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -367,7 +367,7 @@ export default function CareersView() {
                         ● {j.status}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'right', paddingRight: '44px' }}>
+                    <td className="col-right">
                       <button
                         className="btn-secondary"
                         style={{ height: '30px', padding: '0 12px', fontSize: '12px' }}
@@ -405,7 +405,7 @@ export default function CareersView() {
                   <th>Applied Position</th>
                   <th>Date Applied</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right', paddingRight: '44px' }}>Resume</th>
+                  <th className="col-right">Resume</th>
                 </tr>
               </thead>
               <tbody>
@@ -451,7 +451,7 @@ export default function CareersView() {
                         ● {a.status || 'Under Review'}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'right', paddingRight: '44px' }}>
+                    <td className="col-right">
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                         <button
                           className="btn-secondary"

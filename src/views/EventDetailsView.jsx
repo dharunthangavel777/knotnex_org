@@ -381,7 +381,7 @@ export default function EventDetailsView() {
                 placeholder="Search attendees by name, email, phone (+91), ticket ID..."
                 value={attendeeSearch}
                 onChange={(e) => setAttendeeSearch(e.target.value)}
-                width="380px"
+                width="340px"
               />
             </div>
           </div>

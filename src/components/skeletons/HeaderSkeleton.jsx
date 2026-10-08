@@ -14,14 +14,11 @@ export default function HeaderSkeleton() {
 
       {/* Center: Search Pill Bar Skeleton */}
       <div className="appbar-center-search">
-        <SkeletonBox width="420px" height="42px" radius={9999} />
+        <SkeletonBox width="480px" height="42px" radius={9999} />
       </div>
 
       {/* Right: Actions Cluster Skeleton */}
       <div className="appbar-right-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {/* + Create Button Skeleton */}
-        <SkeletonBox width="96px" height="38px" radius={9999} />
-
         {/* Circular Notification Bell Skeleton */}
         <SkeletonCircle size={38} />
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   initialState,
   initialTopNotifications,
@@ -42,13 +42,15 @@ export function AppProvider({ children }) {
   const [selectedPass, setSelectedPass] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
   const [editingJob, setEditingJob] = useState(null);
+  const [editingScheme, setEditingScheme] = useState(null);
 
   // Modals & Popups
   const [activeModal, setActiveModal] = useState(null);
   const [modalData, setModalData] = useState(null);
 
-  // Toasts
+  // Toasts (Single active notification that replaces immediately on new events)
   const [toasts, setToasts] = useState([]);
+  const toastTimerRef = useRef(null);
 
   // Auth State
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -68,21 +70,35 @@ export function AppProvider({ children }) {
   const [knowledgeCategories] = useState(initialState.knowledgeCategories || []);
   const [helpArticles] = useState(initialState.helpArticles || []);
 
-  // Show Toast Helper
+  // Show Toast Helper (Replaces previous popup immediately so notifications don't stack upwards)
   const showToast = (message, type = 'info') => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
     const id = `toast-${Date.now()}-${Math.random()}`;
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3800);
+    setToasts([{ id, message, type }]);
+    toastTimerRef.current = setTimeout(() => {
+      setToasts([]);
+      toastTimerRef.current = null;
+    }, 3500);
   };
 
-  const removeToast = (id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+  const removeToast = () => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+    setToasts([]);
   };
 
   // View Navigation with Micro-loader
   const navigateTo = (viewKey, subAction = null) => {
+    const resetScroll = () => {
+      const el = document.getElementById('mainContentArea');
+      if (el) el.scrollTop = 0;
+      window.scrollTo(0, 0);
+    };
+    resetScroll();
     setIsLoading(true);
     setActiveView(viewKey);
     setActiveSubAction(subAction);
@@ -99,6 +115,9 @@ export function AppProvider({ children }) {
     }
     setTimeout(() => {
       setIsLoading(false);
+      resetScroll();
+      requestAnimationFrame(resetScroll);
+      setTimeout(resetScroll, 60);
     }, 380);
   };
 
@@ -204,6 +223,11 @@ export function AppProvider({ children }) {
     showToast(`Opportunity "${job.title}" published!`, 'success');
   };
 
+  const updateJob = (jobId, updatedData) => {
+    setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, ...updatedData } : j)));
+    showToast(`Opportunity updated successfully!`, 'success');
+  };
+
   // Scheme Helpers
   const addScheme = (newScheme) => {
     const scheme = {
@@ -214,6 +238,11 @@ export function AppProvider({ children }) {
     };
     setSchemes(prev => [scheme, ...prev]);
     showToast(`Grant scheme "${scheme.title}" launched!`, 'success');
+  };
+
+  const updateScheme = (schemeId, updatedData) => {
+    setSchemes(prev => prev.map(s => (s.id === schemeId ? { ...s, ...updatedData } : s)));
+    showToast(`Scheme updated successfully!`, 'success');
   };
 
   // Campaign Helpers
@@ -320,6 +349,9 @@ export function AppProvider({ children }) {
     editingJob,
     setEditingJob,
     startEditJob,
+    editingScheme,
+    setEditingScheme,
+    updateScheme,
     selectedTicketId,
     selectedTicket,
     setSelectedTicketId,
@@ -354,6 +386,7 @@ export function AppProvider({ children }) {
     addEvent,
     updateEvent,
     addJob,
+    updateJob,
     addScheme,
     addCampaign,
     addAchievement,
