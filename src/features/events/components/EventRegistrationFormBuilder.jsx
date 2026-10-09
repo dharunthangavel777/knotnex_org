@@ -167,7 +167,7 @@ export default function EventRegistrationFormBuilder({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))',
             gap: 24,
             width: '100%',
             flex: 1,

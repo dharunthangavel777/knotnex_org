@@ -50,7 +50,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`} id="mainSidebar">
+      <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`} id="mainSidebar">
         {/* Border collapse toggle button '<' as shown in screenshot */}
         <button
           className="sidebar-edge-toggle-btn"
@@ -338,7 +338,7 @@ export default function Sidebar() {
       {/* Mobile Drawer Backdrop */}
       {isMobileSidebarOpen && (
         <div
-          className="sidebar-backdrop show"
+          className="sidebar-backdrop active"
           onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}

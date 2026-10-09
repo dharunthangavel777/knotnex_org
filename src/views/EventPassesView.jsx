@@ -17,6 +17,15 @@ export default function EventPassesView() {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isTabLoading, setIsTabLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      showToast('Event passes roster refreshed successfully!', 'success');
+    }, 450);
+  };
 
   const handleExportCSV = () => {
     const headers = ['#', 'Pass ID', 'Attendee Name', 'Email', 'Event Name', 'Ticket Tier', 'Status', 'Issued Date'];
@@ -217,11 +226,36 @@ export default function EventPassesView() {
 
           <div className="sheets-console-actions">
             <SearchBar
+              id="passesSearchInput"
               placeholder="Search pass ID, attendee, email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               width="320px"
             />
+            <button
+              className="circle-action-btn"
+              id="btnRefreshEventPassesList"
+              title="Refresh event passes"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{
+                  animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            </button>
           </div>
         </div>
 

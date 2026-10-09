@@ -9,12 +9,35 @@ export default function EventsView() {
     events,
     navigateTo,
     selectEvent,
-    showToast
+    showToast,
+    updateEvent
   } = useApp();
+
+  const handleToggleEventActive = (ev) => {
+    const isCurrentlyActive = ev.status !== 'inactive' && ev.active !== false;
+    const nextActive = !isCurrentlyActive;
+    if (updateEvent) {
+      updateEvent(ev.id, {
+        status: nextActive ? (ev._prevStatus || 'upcoming') : 'inactive',
+        _prevStatus: isCurrentlyActive ? ev.status : ev._prevStatus,
+        active: nextActive
+      });
+    }
+    showToast(`Event "${ev.name}" is now ${nextActive ? 'Active' : 'Inactive'}`, nextActive ? 'success' : 'info');
+  };
 
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isTabLoading, setIsTabLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      showToast('Events database refreshed successfully!', 'success');
+    }, 450);
+  };
 
   const handleFilterChange = (newFilter) => {
     if (newFilter === filter) return;
@@ -214,6 +237,30 @@ export default function EventsView() {
               onChange={(e) => setSearchTerm(e.target.value)}
               width="320px"
             />
+            <button
+              className="circle-action-btn"
+              id="btnRefreshEventsList"
+              title="Refresh events list"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{
+                  animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -226,11 +273,11 @@ export default function EventsView() {
               <colgroup>
                 <col style={{ width: '48px' }} />
                 <col style={{ width: '32%' }} />
-                <col style={{ width: '13%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '18%' }} />
                 <col style={{ width: '16%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '12%' }} />
+                <col style={{ width: '85px' }} />
+                <col style={{ width: '90px' }} />
               </colgroup>
               <thead>
                 <tr>
@@ -239,13 +286,14 @@ export default function EventsView() {
                   <th>Category</th>
                   <th>Registrations</th>
                   <th>Date / Schedule</th>
-                  <th>Status</th>
-                  <th className="col-right">Action</th>
+                  <th className="col-center" style={{ width: '85px', minWidth: '85px', textAlign: 'center' }}>Action</th>
+                  <th className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }}>Active</th>
                 </tr>
               </thead>
               <tbody id="eventsTableBody">
                 {filteredEvents.map((ev, idx) => {
                   const pct = Math.min(100, Math.round(((ev.registered || 0) / (ev.capacity || 1)) * 100));
+                  const isActive = ev.status !== 'inactive' && ev.active !== false;
                   return (
                     <tr key={ev.id} style={{ cursor: 'pointer' }} onClick={() => selectEvent(ev.id)}>
                       <td className="col-center" style={{ textAlign: 'center', color: 'var(--neutral-400)', fontWeight: 600, fontSize: '12px' }}>
@@ -287,23 +335,8 @@ export default function EventsView() {
                       <td style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
                         {ev.date}
                       </td>
-                      <td>
-                        <span
-                          className="status-badge"
-                          style={{
-                            background: ev.status === 'upcoming' ? '#ECFDF3' : (ev.status === 'ongoing' ? '#FFFBEB' : '#F2F4F7'),
-                            color: ev.status === 'upcoming' ? '#12B76A' : (ev.status === 'ongoing' ? '#B54708' : '#475467'),
-                            fontSize: '11px',
-                            padding: '2px 8px',
-                            borderRadius: '9999px',
-                            textTransform: 'capitalize'
-                          }}
-                        >
-                          ● {ev.status}
-                        </span>
-                      </td>
-                      <td className="col-right" onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      <td className="col-center" style={{ width: '85px' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <button
                             className="btn-secondary"
                             style={{ height: '32px', padding: '0 14px', fontSize: '12px', fontWeight: 600 }}
@@ -312,6 +345,19 @@ export default function EventsView() {
                             View
                           </button>
                         </div>
+                      </td>
+                      <td className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                        <label
+                          className="active-toggle-ios"
+                          title={isActive ? 'Active (Click to Deactivate)' : 'Inactive (Click to Activate)'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={() => handleToggleEventActive(ev)}
+                          />
+                          <span className="active-toggle-slider" />
+                        </label>
                       </td>
                     </tr>
                   );

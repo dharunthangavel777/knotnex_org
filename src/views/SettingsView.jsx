@@ -2,8 +2,36 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { SettingsSectionSkeleton } from '../components/skeletons';
 
+const SECTION_CONFIG = {
+  account: {
+    title: 'Account',
+    subtitle: 'Manage your profile and organization details',
+    path: 'account'
+  },
+  notifications: {
+    title: 'Notifications',
+    subtitle: 'Select which event, ticket, and gateway alerts you receive',
+    path: 'notifications'
+  },
+  privacy: {
+    title: 'Privacy & Security',
+    subtitle: 'Two-factor authentication, sessions, and compliance controls',
+    path: 'privacy & security'
+  },
+  appearance: {
+    title: 'Appearance & Theme',
+    subtitle: 'Customize the interface styling and density',
+    path: 'appearance'
+  },
+  integrations: {
+    title: 'Connected Integrations',
+    subtitle: 'Connect payment gateways, streaming providers, and communication webhooks',
+    path: 'integrations'
+  }
+};
+
 export default function SettingsView() {
-  const { showToast } = useApp();
+  const { isDarkMode, toggleDarkMode, showToast } = useApp();
   const [activeSection, setActiveSection] = useState('account');
   const [isTabLoading, setIsTabLoading] = useState(false);
 
@@ -22,8 +50,7 @@ export default function SettingsView() {
     notifTickets: true,
     notifDigest: false,
     twoFactor: true,
-    publicProfile: true,
-    darkMode: false
+    publicProfile: true
   });
 
   const toggle = (key) => {
@@ -32,6 +59,28 @@ export default function SettingsView() {
       showToast(`Preference updated.`, 'info');
       return { ...prev, [key]: next };
     });
+  };
+
+  const renderSectionHead = (key) => {
+    const config = SECTION_CONFIG[key] || {
+      title: key,
+      subtitle: '',
+      path: key
+    };
+
+    return (
+      <div className="settings-section-head">
+        <div className="settings-section-head-info">
+          <h3>{config.title}</h3>
+          <p>{config.subtitle}</p>
+        </div>
+        <div className="settings-section-path" id={`settingsSectionPath-${key}`}>
+          <span className="path-root">settings</span>
+          <span className="path-sep">/</span>
+          <span className="path-leaf">{config.path}</span>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -47,6 +96,13 @@ export default function SettingsView() {
           <div className="header-text-group">
             <h1 className="page-title">Settings</h1>
             <p className="page-subtitle">Manage your account, notifications, privacy, and organization preferences.</p>
+          </div>
+        </div>
+        <div className="header-actions">
+          <div className="settings-section-path" id="settingsTopHeaderPath" title={`Active path: settings/${SECTION_CONFIG[activeSection]?.path || activeSection}`}>
+            <span className="path-root">settings</span>
+            <span className="path-sep">/</span>
+            <span className="path-leaf">{SECTION_CONFIG[activeSection]?.path || activeSection}</span>
           </div>
         </div>
       </header>
@@ -100,10 +156,7 @@ export default function SettingsView() {
               {/* Section: Account */}
               {activeSection === 'account' && (
             <div className="settings-section active" id="settingsSectionAccount">
-              <div className="settings-section-head">
-                <h3>Account</h3>
-                <p>Manage your profile and organization details</p>
-              </div>
+              {renderSectionHead('account')}
 
               <div className="settings-group">
                 <div className="settings-group-label">Profile</div>
@@ -153,10 +206,7 @@ export default function SettingsView() {
           {/* Section: Notifications */}
           {activeSection === 'notifications' && (
             <div className="settings-section active">
-              <div className="settings-section-head">
-                <h3>Notifications</h3>
-                <p>Select which event, ticket, and gateway alerts you receive</p>
-              </div>
+              {renderSectionHead('notifications')}
 
               <div className="settings-group">
                 <div className="settings-group-label">Alert Channels</div>
@@ -165,13 +215,13 @@ export default function SettingsView() {
                     <div className="settings-row-title">New Event Registrations</div>
                     <div className="settings-row-desc">Receive real-time push alert when an attendee secures a pass</div>
                   </div>
-                  <label className="toggle-switch-ios">
+                  <label className="active-toggle-ios" title={settingsToggles.notifEvents ? 'Active' : 'Inactive'}>
                     <input
                       type="checkbox"
                       checked={settingsToggles.notifEvents}
                       onChange={() => toggle('notifEvents')}
                     />
-                    <span className="slider" />
+                    <span className="active-toggle-slider" />
                   </label>
                 </div>
 
@@ -180,13 +230,13 @@ export default function SettingsView() {
                     <div className="settings-row-title">Support Ticket Alerts</div>
                     <div className="settings-row-desc">Notify immediate response team when attendee raises a booking error</div>
                   </div>
-                  <label className="toggle-switch-ios">
+                  <label className="active-toggle-ios" title={settingsToggles.notifTickets ? 'Active' : 'Inactive'}>
                     <input
                       type="checkbox"
                       checked={settingsToggles.notifTickets}
                       onChange={() => toggle('notifTickets')}
                     />
-                    <span className="slider" />
+                    <span className="active-toggle-slider" />
                   </label>
                 </div>
 
@@ -195,13 +245,13 @@ export default function SettingsView() {
                     <div className="settings-row-title">Weekly Disbursal Digest</div>
                     <div className="settings-row-desc">Weekly summary email of grant scheme applications and gate attendance</div>
                   </div>
-                  <label className="toggle-switch-ios">
+                  <label className="active-toggle-ios" title={settingsToggles.notifDigest ? 'Active' : 'Inactive'}>
                     <input
                       type="checkbox"
                       checked={settingsToggles.notifDigest}
                       onChange={() => toggle('notifDigest')}
                     />
-                    <span className="slider" />
+                    <span className="active-toggle-slider" />
                   </label>
                 </div>
               </div>
@@ -211,10 +261,7 @@ export default function SettingsView() {
           {/* Section: Privacy */}
           {activeSection === 'privacy' && (
             <div className="settings-section active">
-              <div className="settings-section-head">
-                <h3>Privacy &amp; Security</h3>
-                <p>Two-factor authentication, sessions, and compliance controls</p>
-              </div>
+              {renderSectionHead('privacy')}
 
               <div className="settings-group">
                 <div className="settings-group-label">Authentication</div>
@@ -223,13 +270,13 @@ export default function SettingsView() {
                     <div className="settings-row-title">Two-Factor Authentication (2FA)</div>
                     <div className="settings-row-desc">Secure account logins using an authenticator app (TOTP)</div>
                   </div>
-                  <label className="toggle-switch-ios">
+                  <label className="active-toggle-ios" title={settingsToggles.twoFactor ? 'Active' : 'Inactive'}>
                     <input
                       type="checkbox"
                       checked={settingsToggles.twoFactor}
                       onChange={() => toggle('twoFactor')}
                     />
-                    <span className="slider" />
+                    <span className="active-toggle-slider" />
                   </label>
                 </div>
 
@@ -247,10 +294,7 @@ export default function SettingsView() {
           {/* Section: Appearance */}
           {activeSection === 'appearance' && (
             <div className="settings-section active">
-              <div className="settings-section-head">
-                <h3>Appearance &amp; Theme</h3>
-                <p>Customize the interface styling and density</p>
-              </div>
+              {renderSectionHead('appearance')}
 
               <div className="settings-group">
                 <div className="settings-group-label">Theme Mode</div>
@@ -259,13 +303,20 @@ export default function SettingsView() {
                     <div className="settings-row-title">Dark Mode Theme</div>
                     <div className="settings-row-desc">Switch between light Minimal Canvas and Obsidian dark theme</div>
                   </div>
-                  <label className="toggle-switch-ios">
+                  <label
+                    className="active-toggle-ios"
+                    id="darkThemeToggle"
+                    title={isDarkMode ? 'Dark Mode Active (Click to switch to Light Canvas)' : 'Light Mode Active (Click to switch to Obsidian Dark)'}
+                  >
                     <input
                       type="checkbox"
-                      checked={settingsToggles.darkMode}
-                      onChange={() => toggle('darkMode')}
+                      checked={isDarkMode}
+                      onChange={() => {
+                        toggleDarkMode();
+                        showToast(isDarkMode ? 'Switched to Light Canvas theme' : 'Switched to Obsidian Dark theme', 'info');
+                      }}
                     />
-                    <span className="slider" />
+                    <span className="active-toggle-slider" />
                   </label>
                 </div>
               </div>
@@ -275,10 +326,7 @@ export default function SettingsView() {
           {/* Section: Integrations */}
           {activeSection === 'integrations' && (
             <div className="settings-section active">
-              <div className="settings-section-head">
-                <h3>Connected Integrations</h3>
-                <p>Connect payment gateways, streaming providers, and communication webhooks</p>
-              </div>
+              {renderSectionHead('integrations')}
 
               <div className="settings-group">
                 <div className="settings-group-label">Payment &amp; Communications</div>

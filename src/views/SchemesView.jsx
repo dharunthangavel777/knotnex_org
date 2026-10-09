@@ -5,12 +5,20 @@ import { SchemesListSkeleton, SchemeApplicationsSkeleton } from '../components/s
 import SearchBar from '../components/common/SearchBar';
 
 export default function SchemesView() {
-  const { schemes, schemeApplications, activeSubAction, navigateTo, showToast, setEditingScheme } = useApp();
+  const { schemes, schemeApplications, activeSubAction, navigateTo, showToast, setEditingScheme, updateScheme } = useApp();
 
   const [activeTab, setActiveTab] = useState(activeSubAction === 'manage-schemes' ? 'applications' : 'schemes');
   const [searchTerm, setSearchTerm] = useState('');
   const [isTabLoading, setIsTabLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleToggleScheme = (s) => {
+    const nextStatus = s.status === 'active' ? 'inactive' : 'active';
+    if (updateScheme) {
+      updateScheme(s.id, { status: nextStatus });
+    }
+    showToast(`Scheme "${s.title}" marked as ${nextStatus === 'active' ? 'Active' : 'Inactive'}`, nextStatus === 'active' ? 'success' : 'info');
+  };
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -86,7 +94,7 @@ export default function SchemesView() {
       <div className="module-stat-grid">
         <div className="module-stat-card" id="cardSchemesTotal" title="Active schemes catalog">
           <div className="module-stat-card-top">
-            <div className="module-stat-icon-wrap emerald">
+            <div className="module-stat-icon-wrap brand">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
@@ -108,7 +116,7 @@ export default function SchemesView() {
 
         <div className="module-stat-card" id="cardSchemesFunding" title="Total funding allocated">
           <div className="module-stat-card-top">
-            <div className="module-stat-icon-wrap green">
+            <div className="module-stat-icon-wrap brand">
               <span style={{ fontSize: '19px', fontWeight: 700, lineHeight: 1 }}>₹</span>
             </div>
             <span className="badge-trend-pos">
@@ -132,7 +140,7 @@ export default function SchemesView() {
                 <circle cx="9" cy="7" r="4" />
               </svg>
             </div>
-            <span className="badge-trend-pos" style={{ background: 'rgba(99, 54, 235, 0.08)', color: '#6336EB' }}>
+            <span className="badge-trend-pos" style={{ background: '#F0FDF4', color: '#16A34A' }}>
               <span>+22.5% MoM</span>
             </span>
           </div>
@@ -238,11 +246,11 @@ export default function SchemesView() {
             <table className="recent-products-table">
               <colgroup>
                 <col style={{ width: '48px' }} />
-                <col style={{ width: '34%' }} />
+                <col style={{ width: '35%' }} />
                 <col style={{ width: '18%' }} />
                 <col style={{ width: '18%' }} />
                 <col style={{ width: '16%' }} />
-                <col style={{ width: '14%' }} />
+                <col style={{ width: '90px' }} />
               </colgroup>
               <thead>
                 <tr>
@@ -251,7 +259,7 @@ export default function SchemesView() {
                   <th>Category</th>
                   <th>Grant Pool</th>
                   <th>Deadline</th>
-                  <th style={{ textAlign: 'right', paddingRight: '16px' }}>Status</th>
+                  <th className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }}>Active</th>
                 </tr>
               </thead>
               <tbody>
@@ -298,19 +306,18 @@ export default function SchemesView() {
                     <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                       {s.deadline || '30 Nov 2026'}
                     </td>
-                    <td style={{ textAlign: 'right', paddingRight: '16px' }}>
-                      <span
-                        className="status-badge"
-                        style={{
-                          background: s.status === 'active' ? '#ECFDF3' : '#F2F4F7',
-                          color: s.status === 'active' ? '#12B76A' : '#475467',
-                          fontSize: '11px',
-                          padding: '2px 8px',
-                          borderRadius: '9999px'
-                        }}
+                    <td className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      <label
+                        className="active-toggle-ios"
+                        title={s.status === 'active' ? 'Active (Click to Deactivate)' : 'Inactive (Click to Activate)'}
                       >
-                        ● {s.status}
-                      </span>
+                        <input
+                          type="checkbox"
+                          checked={s.status === 'active'}
+                          onChange={() => handleToggleScheme(s)}
+                        />
+                        <span className="active-toggle-slider" />
+                      </label>
                     </td>
                   </tr>
                 ))}

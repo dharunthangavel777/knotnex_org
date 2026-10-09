@@ -27,6 +27,7 @@ import OrgProfileView from './views/OrgProfileView';
 import TicketsView from './views/TicketsView';
 import HelpCenterView from './views/HelpCenterView';
 import SettingsView from './views/SettingsView';
+import NotificationsView from './views/NotificationsView';
 
 function AppContent() {
   const { activeView, isSidebarCollapsed, isLoading, isInitialLoading } = useApp();
@@ -90,6 +91,8 @@ function AppContent() {
         return <HelpCenterView />;
       case 'settings':
         return <SettingsView />;
+      case 'notifications':
+        return <NotificationsView />;
       default:
         return <DashboardView />;
     }

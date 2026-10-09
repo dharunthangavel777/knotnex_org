@@ -7,7 +7,15 @@ import { downloadCSV } from '../utils/csvExport';
 import { downloadCandidateResume } from '../utils/resumeDownload';
 
 export default function CareersView() {
-  const { jobs, applications, activeSubAction, navigateTo, showToast, selectJob } = useApp();
+  const { jobs, applications, activeSubAction, navigateTo, showToast, selectJob, updateJob } = useApp();
+
+  const handleToggleJobActive = (job) => {
+    const nextStatus = job.status === 'active' ? 'closed' : 'active';
+    if (updateJob) {
+      updateJob(job.id, { status: nextStatus });
+    }
+    showToast(`Role "${job.title}" set to ${nextStatus === 'active' ? 'Active' : 'Inactive'}`, nextStatus === 'active' ? 'success' : 'info');
+  };
 
   const [activeTab, setActiveTab] = useState(activeSubAction === 'applications' ? 'applications' : 'jobs');
   const [searchTerm, setSearchTerm] = useState('');
@@ -251,6 +259,7 @@ export default function CareersView() {
               title="Refresh careers stream"
               onClick={handleRefresh}
               disabled={isRefreshing}
+              style={{ marginLeft: '-18px', marginRight: '10px' }}
             >
               <svg
                 width="15"
@@ -300,9 +309,9 @@ export default function CareersView() {
                 <col style={{ width: '30%' }} />
                 <col style={{ width: '16%' }} />
                 <col style={{ width: '18%' }} />
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '12%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '85px' }} />
+                <col style={{ width: '90px' }} />
               </colgroup>
               <thead>
                 <tr>
@@ -311,8 +320,8 @@ export default function CareersView() {
                   <th>Department</th>
                   <th>Location &amp; Type</th>
                   <th>Applicants</th>
-                  <th>Status</th>
-                  <th className="col-right">Action</th>
+                  <th className="col-center" style={{ width: '85px', minWidth: '85px', textAlign: 'center' }}>Action</th>
+                  <th className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }}>Active</th>
                 </tr>
               </thead>
               <tbody>
@@ -353,31 +362,29 @@ export default function CareersView() {
                     <td style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
                       {j.applicantsCount || 0} candidates
                     </td>
-                    <td>
-                      <span
-                        className="status-badge"
-                        style={{
-                          background: j.status === 'active' ? '#ECFDF3' : '#F2F4F7',
-                          color: j.status === 'active' ? '#12B76A' : '#475467',
-                          fontSize: '11px',
-                          padding: '2px 8px',
-                          borderRadius: '9999px'
-                        }}
-                      >
-                        ● {j.status}
-                      </span>
+                    <td className="col-center" style={{ width: '85px' }} onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button
+                          className="btn-secondary"
+                          style={{ height: '30px', padding: '0 12px', fontSize: '12px' }}
+                          onClick={() => selectJob(j.id)}
+                        >
+                          View
+                        </button>
+                      </div>
                     </td>
-                    <td className="col-right">
-                      <button
-                        className="btn-secondary"
-                        style={{ height: '30px', padding: '0 12px', fontSize: '12px' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          selectJob(j.id);
-                        }}
+                    <td className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      <label
+                        className="active-toggle-ios"
+                        title={j.status === 'active' ? 'Active (Click to Deactivate)' : 'Inactive (Click to Activate)'}
                       >
-                        View
-                      </button>
+                        <input
+                          type="checkbox"
+                          checked={j.status === 'active'}
+                          onChange={() => handleToggleJobActive(j)}
+                        />
+                        <span className="active-toggle-slider" />
+                      </label>
                     </td>
                   </tr>
                 ))}

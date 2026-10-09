@@ -252,15 +252,15 @@ export default function EventEligibilityScreen({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 80px)', position: 'relative' }}>
-      <section className="app-view active" id="viewCreateEventEligibility" style={{ padding: '0 32px 32px 32px', flex: 1, width: '100%', boxSizing: 'border-box' }}>
+      <section className="app-view active" id="viewCreateEventEligibility" style={{ paddingBottom: '32px', flex: 1, width: '100%', boxSizing: 'border-box' }}>
         
         {/* Top Header Row: ONLY Back Arrow and 'Back' text, NO bulky titles or event pills */}
-        <div style={{ display: 'flex', alignItems: 'center', margin: '14px 0 20px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 20px 0' }}>
           <BackButton onClick={onBack} />
         </div>
 
         {/* 2-Column Grid Filling Center Completely */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 20, width: '100%' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 20, width: '100%' }}>
           
           {/* LEFT COLUMN: Eligibility, Speakers, Sponsors, Photos, Docs */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

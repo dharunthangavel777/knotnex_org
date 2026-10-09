@@ -280,10 +280,6 @@ export default function CareerDetailsView() {
             <div className="event-heading-text">
               <div className="event-main-title">
                 <span id="indJobTitle">{job.title}</span>
-                <span className="event-status-pill-live" id="indJobStatusBadge">
-                  <span className="status-pulse-dot"></span>
-                  <span id="indJobStatusText">{job.status ? job.status.toUpperCase() : "ACTIVE"}</span>
-                </span>
               </div>
               <p className="event-sub-desc" id="indJobSubtitle">
                 {job.tagline || job.description || "Lead end-to-end user experience, design systems, and interaction architectures."}
@@ -395,7 +391,7 @@ export default function CareerDetailsView() {
         <div className="module-stat-grid">
           <div className="module-stat-card" id="cardJobTotalApplicants" title="Total registered candidates">
             <div className="module-stat-card-top">
-              <div className="module-stat-icon-wrap emerald">
+              <div className="module-stat-icon-wrap brand">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="9" cy="7" r="4"></circle>
@@ -403,16 +399,12 @@ export default function CareerDetailsView() {
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
               </div>
-              <span className="badge-trend-pos">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                <span>+14.8%</span>
-              </span>
             </div>
             <div className="module-stat-info">
-              <span className="module-stat-label">Total Registrations</span>
+              <span className="module-stat-label">Total Applicants</span>
               <div className="module-stat-value-row">
                 <span className="module-stat-value" id="jobMetricTotalRegistrations">{totalApplicants.toLocaleString()}</span>
-                <span className="module-stat-unit">Attendees</span>
+                <span className="module-stat-unit">Candidates</span>
               </div>
               <div className="module-stat-subtext" id="jobSubtextReg">{pct}% of {capacity.toLocaleString()} total candidate pool</div>
             </div>
@@ -420,20 +412,16 @@ export default function CareerDetailsView() {
 
           <div className="module-stat-card" id="cardJobTotalComp" title="Compensation budget">
             <div className="module-stat-card-top">
-              <div className="module-stat-icon-wrap green">
+              <div className="module-stat-icon-wrap brand">
                 <span style={{ fontSize: "18px", fontWeight: "700", lineHeight: "1" }}>₹</span>
               </div>
-              <span className="badge-trend-pos">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                <span>+8.6%</span>
-              </span>
             </div>
             <div className="module-stat-info">
-              <span className="module-stat-label">Total Revenue (INR)</span>
+              <span className="module-stat-label">Compensation Range</span>
               <div className="module-stat-value-row">
-                <span className="module-stat-value" id="jobMetricTotalRevenue">₹462,000</span>
+                <span className="module-stat-value" id="jobMetricTotalRevenue">{job.salary || '₹28 - 36 LPA'}</span>
               </div>
-              <div className="module-stat-subtext" id="jobSubtextRev">Average package {job.salary || '₹28 - 36 LPA'}</div>
+              <div className="module-stat-subtext" id="jobSubtextRev">Fixed + performance incentive</div>
             </div>
           </div>
 
@@ -445,41 +433,33 @@ export default function CareerDetailsView() {
                   <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
               </div>
-              <span className="badge-trend-pos">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                <span>Active</span>
-              </span>
             </div>
             <div className="module-stat-info">
-              <span className="module-stat-label">Check-In Turnout</span>
+              <span className="module-stat-label">Shortlisted Candidates</span>
               <div className="module-stat-value-row">
-                <span className="module-stat-value" id="jobMetricTurnout">70%</span>
-                <span className="module-stat-unit">Verified</span>
+                <span className="module-stat-value" id="jobMetricTurnout">{shortlistedCount}</span>
+                <span className="module-stat-unit">Profiles</span>
               </div>
-              <div className="module-stat-subtext" id="jobSubtextTurnout">{shortlistedCount} verified via Gate QR scanner</div>
+              <div className="module-stat-subtext" id="jobSubtextTurnout">Passed initial recruiter screening</div>
             </div>
           </div>
 
-          <div className="module-stat-card" id="cardJobInquiries" title="Candidate inquiries & evaluations">
+          <div className="module-stat-card" id="cardJobInquiries" title="Candidate interviews">
             <div className="module-stat-card-top">
               <div className="module-stat-icon-wrap blue">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="6" width="20" height="12" rx="2"></rect>
-                  <path d="M6 12h.01M18 12h.01"></path>
-                  <line x1="10" y1="12" x2="14" y2="12"></line>
+                  <rect x="2" y="7" width="20" height="14" rx="2" />
+                  <path d="M16 21V5a2 2 0 0 1-2-2h-4a2 2 0 0 1-2 2v16" />
                 </svg>
               </div>
-              <span className="badge-trend-pos" style={{ background: "rgba(99, 54, 235, 0.08)", color: "#6336EB" }}>
-                <span>In Review</span>
-              </span>
             </div>
             <div className="module-stat-info">
-              <span className="module-stat-label">Inquiries &amp; Passes</span>
+              <span className="module-stat-label">Interviews Active</span>
               <div className="module-stat-value-row">
-                <span className="module-stat-value" id="jobMetricInquiries">42</span>
-                <span className="module-stat-unit">Tickets</span>
+                <span className="module-stat-value" id="jobMetricInquiries">{interviewCount}</span>
+                <span className="module-stat-unit">Rounds</span>
               </div>
-              <div className="module-stat-subtext">18 resolved · Gate passes &amp; seats</div>
+              <div className="module-stat-subtext">Technical &amp; culture assessment</div>
             </div>
           </div>
         </div>
@@ -489,7 +469,7 @@ export default function CareerDetailsView() {
           <div className="attendee-console-top-bar">
             <div className="attendee-count-cluster">
               <span className="attendee-count-number" id="indApplicantsCount">{candidateList.length}</span>
-              <span className="attendee-count-label">Registered Attendees</span>
+              <span className="attendee-count-label">Job Applicants</span>
             </div>
 
             <div className="attendee-status-filter-pills">
@@ -503,32 +483,32 @@ export default function CareerDetailsView() {
                 className={`attendee-filter-pill-btn ${candidateFilter === 'shortlisted' ? 'active' : ''}`}
                 onClick={() => handleFilterChange('shortlisted')}
               >
-                Checked-in ({shortlistedCount})
+                Shortlisted ({shortlistedCount})
               </button>
               <button
                 className={`attendee-filter-pill-btn ${candidateFilter === 'review' ? 'active' : ''}`}
                 onClick={() => handleFilterChange('review')}
               >
-                Confirmed ({reviewCount})
+                In Review ({reviewCount})
               </button>
               <button
                 className={`attendee-filter-pill-btn ${candidateFilter === 'interview' ? 'active' : ''}`}
                 onClick={() => handleFilterChange('interview')}
               >
-                Paid ({candidateList.length})
+                Interviewing ({interviewCount})
               </button>
               <button
                 className={`attendee-filter-pill-btn ${candidateFilter === 'offered' ? 'active' : ''}`}
                 onClick={() => handleFilterChange('offered')}
               >
-                Sponsored ({offeredCount + 1})
+                Offered ({offeredCount})
               </button>
             </div>
 
             <div className="attendee-console-actions">
               <SearchBar
                 id="indJobCandidateSearch"
-                placeholder="Search attendees by name, email, phone (+91), tick"
+                placeholder="Search candidates by name, email, role..."
                 value={candidateSearch}
                 onChange={(e) => setCandidateSearch(e.target.value)}
                 width="340px"
@@ -542,34 +522,28 @@ export default function CareerDetailsView() {
             ) : (
               <table className="recent-products-table" id="indJobCandidatesTable">
                 <colgroup>
-                  <col style={{ width: "44px" }} />
-                  <col style={{ width: "18%" }} />
+                  <col style={{ width: "48px" }} />
+                  <col style={{ width: "27%" }} />
+                  <col style={{ width: "27%" }} />
                   <col style={{ width: "16%" }} />
-                  <col style={{ width: "13%" }} />
-                  <col style={{ width: "10%" }} />
-                  <col style={{ width: "11%" }} />
-                  <col style={{ width: "10%" }} />
-                  <col style={{ width: "9%" }} />
-                  <col style={{ width: "13%" }} />
+                  <col style={{ width: "16%" }} />
+                  <col style={{ width: "14%" }} />
                 </colgroup>
                 <thead>
                   <tr>
-                    <th className="col-center" style={{ width: "44px", color: "var(--neutral-400)", fontSize: "11px" }}>#</th>
-                    <th>Attendee</th>
-                    <th>Email Address</th>
-                    <th>Phone Number</th>
-                    <th>Pass ID</th>
-                    <th>Transaction ID</th>
-                    <th>City / State</th>
-                    <th>Registered Date</th>
-                    <th style={{ textAlign: "right", paddingRight: "36px" }}>Resume</th>
+                    <th className="col-center" style={{ width: "48px", color: "var(--neutral-400)", fontSize: "11px" }}>#</th>
+                    <th>Candidate</th>
+                    <th>Applied Position</th>
+                    <th>Date Applied</th>
+                    <th>Status</th>
+                    <th className="col-right">Resume</th>
                   </tr>
                 </thead>
                 <tbody id="indJobCandidatesTableBody">
                   {filteredCandidates.length === 0 ? (
                     <tr>
-                      <td colSpan="9" style={{ textAlign: "center", padding: "36px", color: "var(--neutral-500)" }}>
-                        No attendee registrations found matching the current search or filter.
+                      <td colSpan="6" style={{ textAlign: "center", padding: "36px", color: "var(--neutral-500)" }}>
+                        No candidates found matching the current search or filter.
                       </td>
                     </tr>
                   ) : (
@@ -580,45 +554,44 @@ export default function CareerDetailsView() {
                             {(idx + 1).toString().padStart(2, '0')}
                           </td>
                           <td>
-                            <div className="attendee-user-cell">
-                              <div className="attendee-avatar-initial with-photo">
-                                <img src={getUserAvatar(cand, idx)} alt={cand.name} className="attendee-avatar-img" />
-                                <span className="avatar-initial-fallback">{(cand.name || 'A').charAt(0)}</span>
-                              </div>
-                              <div className="attendee-name-col">
-                                <span className="attendee-name-title">{cand.name}</span>
-                                <span className="attendee-org-sub">{cand.headline}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <img
+                                src={getUserAvatar(cand, idx)}
+                                alt={cand.name}
+                                style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }}
+                              />
+                              <div>
+                                <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>
+                                  {cand.name}
+                                </div>
+                                <div style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
+                                  {cand.email || 'candidate@knotnex.org'}
+                                </div>
                               </div>
                             </div>
                           </td>
-                          <td style={{ fontSize: "12.5px", color: "var(--neutral-600)" }}>
-                            {cand.email}
+                          <td style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                            {cand.role || cand.appliedPosition || job.title}
+                          </td>
+                          <td style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                            {cand.appliedDate || cand.date || 'Recent'}
                           </td>
                           <td>
-                            <div className="attendee-phone-cell">
-                              <svg className="attendee-phone-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                              </svg>
-                              <span>{cand.phone}</span>
-                            </div>
-                          </td>
-                          <td>
-                            <span style={{ fontFamily: "monospace", fontSize: "12px", fontWeight: 600, color: "var(--knotnex-primary)" }}>
-                              {cand.appId}
+                            <span
+                              className="status-badge"
+                              style={{
+                                background: (cand.stage || cand.status || '').toLowerCase().includes('shortlist') ? '#ECFDF3' : ((cand.stage || cand.status || '').toLowerCase().includes('interview') ? '#EFF8FF' : '#FFFBEB'),
+                                color: (cand.stage || cand.status || '').toLowerCase().includes('shortlist') ? '#12B76A' : ((cand.stage || cand.status || '').toLowerCase().includes('interview') ? '#175CD3' : '#B54708'),
+                                fontSize: '11px',
+                                padding: '2px 8px',
+                                borderRadius: '9999px',
+                                fontWeight: 500
+                              }}
+                            >
+                              ● {cand.stage || cand.status || 'Under Review'}
                             </span>
                           </td>
-                          <td>
-                            <span style={{ fontFamily: "monospace", fontSize: "11.5px", color: "var(--neutral-500)" }}>
-                              {cand.resume}
-                            </span>
-                          </td>
-                          <td style={{ fontSize: "12.5px", color: "var(--neutral-700)" }}>
-                            {cand.city}
-                          </td>
-                          <td style={{ fontSize: "12px", color: "var(--neutral-500)" }}>
-                            {cand.appliedDate}
-                          </td>
-                          <td style={{ textAlign: "right", paddingRight: "36px", verticalAlign: "middle" }}>
+                          <td className="col-right" style={{ verticalAlign: "middle" }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                               <button
                                 type="button"
@@ -633,19 +606,19 @@ export default function CareerDetailsView() {
                                   gap: "6px",
                                   cursor: "pointer"
                                 }}
-                              onClick={() => {
-                                const filename = downloadCandidateResume(cand);
-                                showToast(`Downloaded resume: ${filename}`, 'success');
-                              }}
-                              title={`Download ${cand.name}'s resume`}
-                            >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="7 10 12 15 17 10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                              </svg>
-                              <span>Resume</span>
-                            </button>
+                                onClick={() => {
+                                  const filename = downloadCandidateResume(cand);
+                                  showToast(`Downloaded resume: ${filename}`, 'success');
+                                }}
+                                title={`Download ${cand.name}'s resume`}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                  <polyline points="7 10 12 15 17 10" />
+                                  <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                                <span>Resume</span>
+                              </button>
                             </div>
                           </td>
                         </tr>

@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import BackButton from '../components/common/BackButton';
-import SchemeEligibilityDocsForm from './SchemeEligibilityDocsForm';
-import SchemeProcessFaqsForm from './SchemeProcessFaqsForm';
+import SchemeEligibilityCriteriaCard from './SchemeEligibilityCriteriaCard';
+import SchemeRequiredDocsCard from './SchemeRequiredDocsCard';
+import SchemeProcessStepsCard from './SchemeProcessStepsCard';
+import SchemeFaqsCard from './SchemeFaqsCard';
 
 export default function SchemeEligibilityProcess({
   eligibilityCriteria = [],
@@ -36,47 +38,47 @@ export default function SchemeEligibilityProcess({
         className="app-view active"
         id="viewSchemeEligibilityProcess"
         style={{
-          paddingTop: '8px',
-          paddingBottom: '32px',
-          flex: 1
+          paddingBottom: '20px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
         {/* Top Header: Back Button to return to Scheme Details */}
-        <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center' }}>
+        <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           <BackButton
             id="btnBackToOverviewFromEligibility"
             onClick={onBackToOverview}
           />
         </div>
 
-        {/* 2-Column Full-Width Grid filling the page alone */}
+        {/* 2x2 Quadrant Grid: 4 Separate Cards Filling the Page Fully Without Moving */}
         <div
-          className="create-scheme-container"
-          style={{
-            width: '100%',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
-            gap: '24px',
-            alignItems: 'stretch'
-          }}
+          className="scheme-eligibility-quad-grid"
         >
-          {/* ========================================================
-              LEFT COMPONENT: Eligibility & Required Documents
-             ======================================================== */}
-          <SchemeEligibilityDocsForm
+          {/* Quadrant 1 (Top-Left): Eligibility Criteria */}
+          <SchemeEligibilityCriteriaCard
             eligibilityCriteria={eligibilityCriteria}
             setEligibilityCriteria={setEligibilityCriteria}
+            showToast={showToast}
+          />
+
+          {/* Quadrant 2 (Top-Right): How to Apply (Process Steps) */}
+          <SchemeProcessStepsCard
+            applicationSteps={applicationSteps}
+            setApplicationSteps={setApplicationSteps}
+            showToast={showToast}
+          />
+
+          {/* Quadrant 3 (Bottom-Left): Required Documents */}
+          <SchemeRequiredDocsCard
             requirements={requirements}
             setRequirements={setRequirements}
             showToast={showToast}
           />
 
-          {/* ========================================================
-              RIGHT COMPONENT: How to Apply & FAQs
-             ======================================================== */}
-          <SchemeProcessFaqsForm
-            applicationSteps={applicationSteps}
-            setApplicationSteps={setApplicationSteps}
+          {/* Quadrant 4 (Bottom-Right): Frequently Asked Questions */}
+          <SchemeFaqsCard
             faqs={faqs}
             setFaqs={setFaqs}
             showToast={showToast}

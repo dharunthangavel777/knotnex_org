@@ -388,7 +388,7 @@ export default function CreateOpportunityView() {
           style={{
             width: '100%',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))',
             gap: '24px',
             alignItems: 'start'
           }}

@@ -182,7 +182,6 @@ export default function CreateSchemeView() {
         className="app-view active"
         id="viewCreateScheme"
         style={{
-          paddingTop: '8px',
           paddingBottom: '32px',
           flex: 1
         }}
@@ -193,7 +192,7 @@ export default function CreateSchemeView() {
           style={{
             width: '100%',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))',
             gap: '24px',
             alignItems: 'start'
           }}

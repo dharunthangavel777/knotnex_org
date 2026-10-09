@@ -12,7 +12,6 @@ export default function CreateSchemeSkeleton() {
         className="app-view active skeleton-page-view"
         id="skeletonViewCreateScheme"
         style={{
-          paddingTop: '8px',
           paddingBottom: '32px',
           flex: 1
         }}

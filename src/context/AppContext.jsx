@@ -27,6 +27,37 @@ export function AppProvider({ children }) {
     return () => clearTimeout(timer);
   }, []);
 
+  // Dark Mode Theme State & Persistence
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      const stored = localStorage.getItem('knotnex_dark_mode');
+      if (stored !== null) return stored === 'true';
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+  };
+
+  useEffect(() => {
+    try {
+      if (isDarkMode) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('knotnex_dark_mode', 'true');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('knotnex_dark_mode', 'false');
+      }
+    } catch (e) {
+      console.error('Failed to sync dark mode', e);
+    }
+  }, [isDarkMode]);
+
   // Global Search
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -162,6 +193,16 @@ export function AppProvider({ children }) {
   const markAllNotifsRead = () => {
     setTopNotifications(prev => prev.map(n => ({ ...n, unread: false })));
     showToast('All notifications marked as read', 'success');
+  };
+
+  const markNotifAsRead = (id) => {
+    setTopNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+    showToast('Notification marked as read', 'success');
+  };
+
+  const deleteNotif = (id) => {
+    setTopNotifications(prev => prev.filter(n => n.id !== id));
+    showToast('Notification dismissed', 'info');
   };
 
   const clearAllNotifs = () => {
@@ -333,6 +374,8 @@ export function AppProvider({ children }) {
     isNotifOpen,
     setIsNotifOpen,
     markAllNotifsRead,
+    markNotifAsRead,
+    deleteNotif,
     clearAllNotifs,
     // Selected
     selectedEventId,
@@ -395,6 +438,10 @@ export function AppProvider({ children }) {
     addRegistration,
     setRegistrations,
     updateTicketStatus,
+    // Theme Mode
+    isDarkMode,
+    setIsDarkMode,
+    toggleDarkMode,
     // Auth
     isLoggedIn,
     setIsLoggedIn

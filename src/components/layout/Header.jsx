@@ -4,6 +4,7 @@ import SearchBar from '../common/SearchBar';
 
 export default function Header() {
   const {
+    activeView,
     navigateTo,
     searchQuery,
     setSearchQuery,
@@ -71,14 +72,13 @@ export default function Header() {
       <div className="appbar-right-actions">
 
         {/* Circular Notification Bell Button */}
-        <div className="appbar-dropdown-anchor" id="topNotificationsWrapper" ref={notifRef}>
+        <div className="appbar-dropdown-anchor" id="topNotificationsWrapper">
           <button
-            className="appbar-circle-bell-btn"
+            className={`appbar-circle-bell-btn ${activeView === 'notifications' ? 'active' : ''}`}
             title="Notifications"
             id="btnTopNotifications"
-            aria-haspopup="true"
-            aria-expanded={isNotifOpen}
-            onClick={() => setIsNotifOpen(!isNotifOpen)}
+            aria-label="Open notifications screen"
+            onClick={() => navigateTo('notifications')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -86,73 +86,6 @@ export default function Header() {
             </svg>
             {unreadCount > 0 && <span className="appbar-bell-dot" id="topNotifDot" />}
           </button>
-
-          {isNotifOpen && (
-            <div className="notifications-dropdown-panel" id="topNotificationsPanel" style={{ display: 'flex' }}>
-              <div className="notif-header">
-                <div className="notif-header-title-wrap">
-                  <span className="notif-header-title">Notifications</span>
-                  <span className="notif-unread-count-badge" id="notifUnreadCountBadge">
-                    {unreadCount > 0 ? `${unreadCount} New` : '0 New'}
-                  </span>
-                </div>
-                <button className="notif-mark-read-btn" id="btnMarkAllNotifsRead" onClick={markAllNotifsRead}>
-                  Mark all read
-                </button>
-              </div>
-
-              <div className="notif-filter-tabs">
-                <button
-                  className={`notif-filter-tab-btn ${activeNotifFilter === 'all' ? 'active' : ''}`}
-                  onClick={() => setActiveNotifFilter('all')}
-                >
-                  All ({topNotifications.length})
-                </button>
-                <button
-                  className={`notif-filter-tab-btn ${activeNotifFilter === 'txn' ? 'active' : ''}`}
-                  onClick={() => setActiveNotifFilter('txn')}
-                >
-                  Transactions
-                </button>
-                <button
-                  className={`notif-filter-tab-btn ${activeNotifFilter === 'gate' ? 'active' : ''}`}
-                  onClick={() => setActiveNotifFilter('gate')}
-                >
-                  Gate Check-in
-                </button>
-              </div>
-
-              <div className="notif-list-body" id="notifListBody">
-                {filteredNotifications.length === 0 ? (
-                  <div style={{ padding: '24px', textAlign: 'center', color: '#6B7280', fontSize: '13px' }}>
-                    No notifications
-                  </div>
-                ) : (
-                  filteredNotifications.map(n => (
-                    <div key={n.id} className={`notif-item ${n.unread ? 'unread' : ''}`}>
-                      <div className="notif-item-icon">
-                        <span className="material-symbols-outlined" style={{ fontSize: '18px', color: n.type === 'txn' ? '#12B76A' : '#6336EB' }}>
-                          {n.type === 'txn' ? 'payments' : 'qr_code_scanner'}
-                        </span>
-                      </div>
-                      <div className="notif-item-content">
-                        <div className="notif-item-title">{n.title}</div>
-                        <div className="notif-item-msg">{n.msg}</div>
-                        <div className="notif-item-time">{n.time}</div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="notif-footer">
-                <span style={{ color: '#6B7280' }}>Live Gateway Sync</span>
-                <a href="#clear" onClick={(e) => { e.preventDefault(); clearAllNotifs(); }} id="btnClearAllNotifs">
-                  Clear all
-                </a>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* User Profile Badge: Purple circle avatar with "R", Name, Email & Chevron */}

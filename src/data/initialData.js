@@ -71,7 +71,8 @@ export const initialTopNotifications = [
     msg: 'HDFC gateway verified instant clearance for Priya Sharma (Annual Youth Tech Summit 2026).',
     time: '4m ago',
     unread: true,
-    code: 'TXN-8401-HDFC'
+    code: 'TXN-8401-HDFC',
+    targetView: 'eventPasses'
   },
   {
     id: 'notif-2',
@@ -80,7 +81,8 @@ export const initialTopNotifications = [
     msg: 'Dr. Marcus Sterling validated successfully at Gate 4B Turnstile Scanner.',
     time: '18m ago',
     unread: true,
-    code: '#KNT-8401'
+    code: '#KNT-8401',
+    targetView: 'eventPasses'
   },
   {
     id: 'notif-3',
@@ -89,7 +91,8 @@ export const initialTopNotifications = [
     msg: 'UPI Auto-settlement verified for Rohan Verma (Climate Action Hackathon).',
     time: '35m ago',
     unread: true,
-    code: 'TXN-8402-UPI'
+    code: 'TXN-8402-UPI',
+    targetView: 'eventPasses'
   },
   {
     id: 'notif-4',
@@ -98,7 +101,28 @@ export const initialTopNotifications = [
     msg: 'Elena Vance pass credentials confirmed for Keynote Stage access.',
     time: '1h ago',
     unread: false,
-    code: '#KNT-8403'
+    code: '#KNT-8403',
+    targetView: 'eventPasses'
+  },
+  {
+    id: 'notif-5',
+    type: 'career',
+    title: 'New Candidate Profile · Sophia Chen',
+    msg: 'Applied for Community & Volunteer Manager position with Stanford AI credentials.',
+    time: '2h ago',
+    unread: true,
+    code: 'APP-8401',
+    targetView: 'careers'
+  },
+  {
+    id: 'notif-6',
+    type: 'scheme',
+    title: 'Grant Direct Beneficiary Transfer Verified',
+    msg: 'Tranche #4 DBT payment of ₹2,50,000 cleared for National Innovation Grant.',
+    time: '3h ago',
+    unread: false,
+    code: 'DBT-9921',
+    targetView: 'schemes'
   }
 ];
 

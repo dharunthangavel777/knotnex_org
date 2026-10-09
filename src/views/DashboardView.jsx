@@ -19,6 +19,15 @@ export default function DashboardView() {
   const [searchTerm, setSearchTerm] = useState('');
   const [itemActiveStates, setItemActiveStates] = useState({});
   const [isTabLoading, setIsTabLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      showToast('Recent activities stream refreshed successfully!', 'success');
+    }, 450);
+  };
 
   const handleActFilterChange = (newFilter) => {
     if (newFilter === actFilter) return;
@@ -258,7 +267,34 @@ export default function DashboardView() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 width="320px"
+                style={{ marginLeft: '-8px', marginRight: 'calc(var(--side-growth) + 10px)' }}
               />
+
+              <button
+                className="circle-action-btn"
+                id="btnRefreshDashboardActivities"
+                title="Refresh recent activities"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                style={{ marginRight: '10px' }}
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  style={{
+                    animation: isRefreshing ? 'spin 0.6s linear infinite' : 'none',
+                    transition: 'transform 0.2s ease'
+                  }}
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              </button>
 
               <button
                 className="btn-see-more-pill"
@@ -286,11 +322,10 @@ export default function DashboardView() {
               <table className="recent-products-table">
               <colgroup>
                 <col style={{ width: '44px' }} />
-                <col style={{ width: '35%' }} />
-                <col style={{ width: '11%' }} />
-                <col style={{ width: '17%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '11%' }} />
+                <col style={{ width: '38%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '16%' }} />
                 <col style={{ width: '90px' }} />
               </colgroup>
               <thead>
@@ -300,14 +335,13 @@ export default function DashboardView() {
                   <th>Type</th>
                   <th>Metric / Info</th>
                   <th>Date Posted</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'center', width: '90px', paddingRight: '28px' }}>Active</th>
+                  <th className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }}>Active</th>
                 </tr>
               </thead>
               <tbody id="recentActivitiesTbody">
                 {filteredActivities.length === 0 ? (
                   <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: '36px', color: 'var(--neutral-400)' }}>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: 'var(--neutral-400)' }}>
                       No matching activities found for your query.
                     </td>
                   </tr>
@@ -388,22 +422,7 @@ export default function DashboardView() {
                         <td style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
                           {item.date}
                         </td>
-                        <td>
-                          <span
-                            className="status-badge"
-                            style={{
-                              background: item.status === 'upcoming' || item.status === 'active' ? '#ECFDF3' : (item.status === 'ongoing' ? '#FFFBEB' : '#F2F4F7'),
-                              color: item.status === 'upcoming' || item.status === 'active' ? '#12B76A' : (item.status === 'ongoing' ? '#B54708' : '#475467'),
-                              fontSize: '11px',
-                              padding: '2px 8px',
-                              borderRadius: '9999px',
-                              textTransform: 'capitalize'
-                            }}
-                          >
-                            ● {item.status}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: 'center', width: '90px', paddingRight: '28px' }} onClick={(e) => e.stopPropagation()}>
+                        <td className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                           <label className="active-toggle-ios" title={isActive ? 'Active (Click to Toggle)' : 'Inactive (Click to Toggle)'}>
                             <input
                               type="checkbox"
