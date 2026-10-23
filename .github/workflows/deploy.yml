@@ -30,6 +30,13 @@ jobs:
         env:
           VITE_PROD_API_URL: https://knotnex-backend-389663780266.asia-south1.run.app/api/v1
 
+      - name: Verify Deployment Credentials
+        if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KNOTNEX_F68FD == '' && secrets.FIREBASE_SERVICE_ACCOUNT == '' && secrets.FIREBASE_TOKEN == '' }}"
+        run: |
+          echo "::error::Missing Firebase deployment credentials in GitHub Repository Secrets!"
+          echo "Please add FIREBASE_TOKEN or FIREBASE_SERVICE_ACCOUNT_KNOTNEX_F68FD in GitHub Settings > Secrets and variables > Actions"
+          exit 1
+
       - name: Deploy to Firebase Hosting via Service Account
         if: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KNOTNEX_F68FD != '' || secrets.FIREBASE_SERVICE_ACCOUNT != '' }}"
         uses: FirebaseExtended/action-hosting-deploy@v0
