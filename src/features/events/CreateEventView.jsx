@@ -1127,7 +1127,7 @@ export default function CreateEventView({
       </section>
 
       {/* Sticky Bottom Bar: Save Draft on left, Small Next Button on right */}
-      <div style={{
+      <div className="create-event-sticky-bar" style={{
         position: 'sticky',
         bottom: 0,
         zIndex: 50,

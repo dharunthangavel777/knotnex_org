@@ -598,6 +598,7 @@ export default function CreateOpportunityView() {
 
       {/* Sticky Bottom Bar: Cancel & Discard on left, Next: Registration Form on right */}
       <div
+        className="opportunity-sticky-bar"
         style={{
           position: 'sticky',
           bottom: 0,

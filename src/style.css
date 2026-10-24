@@ -14648,5 +14648,684 @@ body.dark-mode .scheme-card-content-scroll::-webkit-scrollbar-thumb:hover {
   }
 }
 
+/* ==========================================================================
+   MASTER RESPONSIVE STYLESHEET: MOBILE, TABLET & DESKTOP DEVICE ADAPTATION
+   Pixel-perfect responsive experience across phones, tablets, and desktops
+   ========================================================================== */
+
+/* Universal Responsive Foundation */
+html, body {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.desktop-viewport {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.desktop-app-frame {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  display: flex !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.main-content {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 !important;
+  height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  position: relative !important;
+}
+
+.content-fade-in {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.app-view {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Base Mobile Close Button for Off-canvas Drawer */
+.sidebar-mobile-close-btn {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   1. TABLET LANDSCAPE & DESKTOPS (<= 1100px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .module-stat-grid,
+  .events-stat-grid,
+  .stat-grid,
+  .kpi-grid,
+  .dashboard-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .qa-horizontal-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .content-grid-3,
+  .event-cards-grid,
+  .schemes-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. TABLET PORTRAIT & MOBILE SCREENS (<= 991px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 991px) {
+  /* Off-canvas Slide-out Drawer */
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    width: 285px !important;
+    min-width: 285px !important;
+    max-width: 86vw !important;
+    z-index: 1050 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: none !important;
+    border-right: 1px solid var(--border-default, #E5E7EB) !important;
+    background-color: var(--bg-surface, #FFFFFF) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 20px 14px !important;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0) !important;
+    box-shadow: 0 0 35px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  .sidebar-edge-toggle-btn {
+    display: none !important;
+  }
+
+  .sidebar-mobile-close-btn {
+    display: flex !important;
+    position: absolute !important;
+    top: 14px !important;
+    right: 12px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: var(--neutral-100, #F3F4F6) !important;
+    border: 1px solid var(--border-default, #E5E7EB) !important;
+    color: var(--neutral-700, #374151) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 1060 !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .sidebar-mobile-close-btn:hover {
+    background: var(--neutral-200, #E5E7EB) !important;
+    color: var(--neutral-900, #111827) !important;
+  }
+
+  /* Backdrop Overlay */
+  .sidebar-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background-color: rgba(15, 23, 42, 0.48) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    z-index: 1040 !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .sidebar-backdrop.active {
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Appbar Header on Tablet */
+  .appbar-header {
+    padding: 0 16px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    gap: 12px !important;
+  }
+
+  .appbar-mobile-menu-btn {
+    display: flex !important;
+  }
+
+  .appbar-center-search {
+    transform: none !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    max-width: 380px !important;
+    flex: 1 !important;
+    justify-content: flex-start !important;
+  }
+
+  .appbar-center-search .knotnex-search-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .appbar-right-actions {
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Views Base Padding */
+  .app-view {
+    padding: 16px 16px 36px 16px !important;
+    gap: 16px !important;
+  }
+
+  /* Hero Banner */
+  .home-interactive-banner {
+    padding: 22px 20px 16px 20px !important;
+    min-height: auto !important;
+    border-radius: 16px !important;
+  }
+
+  .banner-ambient-glow {
+    width: 320px !important;
+    height: 320px !important;
+  }
+
+  /* Quick Actions Linear Grid */
+  .qa-horizontal-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Settings Layout */
+  .settings-layout {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .settings-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    scrollbar-width: none !important;
+    gap: 8px !important;
+    padding-bottom: 4px !important;
+    border-bottom: 1px solid var(--border-default, #E5E7EB) !important;
+  }
+
+  .settings-nav::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .settings-nav-item {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 8px 14px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. MOBILE PHONES & SMALL TABLETS (<= 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .app-view {
+    padding: 14px 12px 32px 12px !important;
+    gap: 14px !important;
+  }
+
+  /* Content Header */
+  .content-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .header-title-group {
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .header-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .header-actions button,
+  .header-actions .btn-primary,
+  .header-actions .btn-secondary {
+    flex: 1 !important;
+    min-width: 120px !important;
+    justify-content: center !important;
+    height: 38px !important;
+  }
+
+  .page-title {
+    font-size: 19px !important;
+    line-height: 1.3 !important;
+  }
+
+  .page-subtitle {
+    font-size: 12.5px !important;
+  }
+
+  /* Stat Grids Stack Single Column */
+  .module-stat-grid,
+  .events-stat-grid,
+  .stat-grid,
+  .kpi-grid,
+  .dashboard-stat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .module-stat-card {
+    padding: 14px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .module-stat-value {
+    font-size: 20px !important;
+  }
+
+  /* Consoles & Activity Feeds */
+  .sheets-console-top-bar,
+  .recent-act-top-bar,
+  .attendee-console-top-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+    min-height: auto !important;
+  }
+
+  .sheets-count-cluster,
+  .recent-act-items-count,
+  .attendee-count-cluster {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .sheets-status-filter-pills,
+  .recent-act-type-filters,
+  .attendee-status-filter-pills,
+  .segmented-filter-pills {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 4px !important;
+    scrollbar-width: none !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .sheets-status-filter-pills::-webkit-scrollbar,
+  .recent-act-type-filters::-webkit-scrollbar,
+  .attendee-status-filter-pills::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .sheets-filter-pill-btn,
+  .recent-act-filter-btn,
+  .attendee-filter-pill-btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .sheets-console-actions,
+  .recent-act-top-right-group,
+  .attendee-console-actions {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+    margin: 0 !important;
+  }
+
+  .sheets-console-actions .knotnex-search-wrapper,
+  .recent-act-top-right-group .knotnex-search-wrapper,
+  .attendee-console-actions .knotnex-search-wrapper {
+    flex: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Table Containers Ensure Horizontal Touch Scrolling */
+  .table-responsive-wrapper,
+  .figma-recent-activities-card > div[style*="overflow"],
+  .sheets-console-card > div[style*="overflow"],
+  .table-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+
+  .recent-products-table,
+  .sheets-table,
+  .attendee-table {
+    min-width: 580px !important;
+  }
+
+  /* Forms & Multi-column Grids Stack */
+  .form-row-2,
+  .form-grid-2,
+  .studio-form-grid,
+  .create-scheme-container,
+  .create-opportunity-container {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+
+  .studio-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .studio-card-body {
+    padding: 16px 14px !important;
+  }
+
+  .studio-card-header {
+    padding: 14px 16px !important;
+  }
+
+  /* Sticky Bottom Action Bars on Forms */
+  .create-event-sticky-bar,
+  .opportunity-sticky-bar,
+  .scheme-sticky-bar {
+    padding: 10px 14px !important;
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+  }
+
+  .create-event-sticky-bar button,
+  .opportunity-sticky-bar button,
+  .scheme-sticky-bar button {
+    width: 100% !important;
+    min-width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .create-event-sticky-bar > div,
+  .opportunity-sticky-bar > div,
+  .scheme-sticky-bar > div {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .create-event-sticky-bar > div > button,
+  .opportunity-sticky-bar > div > button,
+  .scheme-sticky-bar > div > button {
+    flex: 1 !important;
+  }
+
+  /* Modals */
+  .modal-dialog,
+  .app-modal-dialog {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    margin: 10px auto !important;
+    border-radius: 14px !important;
+  }
+
+  .modal-body {
+    padding: 16px 14px !important;
+  }
+
+  .modal-footer {
+    padding: 12px 14px !important;
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+  }
+
+  .modal-footer button {
+    width: 100% !important;
+    min-width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .details-drawer {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. COMPACT MOBILE SCREENS & IN-APP WEBVIEWS (<= 576px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 576px) {
+  /* Header in Mobile In-App View */
+  .appbar-header {
+    height: 56px !important;
+    min-height: 56px !important;
+    padding: 0 10px !important;
+    gap: 6px !important;
+  }
+
+  .appbar-mobile-menu-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .appbar-center-search {
+    min-width: 0 !important;
+    flex: 1 !important;
+    max-width: none !important;
+  }
+
+  .knotnex-search-bar {
+    height: 34px !important;
+    padding-left: 32px !important;
+    padding-right: 8px !important;
+  }
+
+  .knotnex-search-icon {
+    left: 8px !important;
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  .knotnex-search-input {
+    font-size: 12px !important;
+  }
+
+  .appbar-right-actions {
+    gap: 6px !important;
+  }
+
+  .appbar-circle-bell-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .appbar-profile-badge {
+    padding: 0 !important;
+    gap: 0 !important;
+    background: transparent !important;
+  }
+
+  .appbar-avatar-circle {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+  }
+
+  .appbar-profile-details,
+  .appbar-profile-chevron {
+    display: none !important;
+  }
+
+  /* View Padding */
+  .app-view {
+    padding: 10px 8px 24px 8px !important;
+    gap: 12px !important;
+  }
+
+  /* Hero Banner */
+  .home-interactive-banner {
+    padding: 18px 16px 14px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .banner-ambient-glow {
+    width: 240px !important;
+    height: 240px !important;
+  }
+
+  /* Quick Actions Cards */
+  .qa-linear-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .qa-linear-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
+
+  .qa-linear-title {
+    font-size: 13.5px !important;
+  }
+
+  .qa-linear-desc {
+    font-size: 11px !important;
+  }
+
+  .btn-qa-launch {
+    height: 32px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* Toast Notification */
+  .toast-container {
+    bottom: 12px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  .toast {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 12.5px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. ULTRA-COMPACT SCREENS (<= 380px - e.g. Galaxy Z Fold Cover)
+   -------------------------------------------------------------------------- */
+@media (max-width: 380px) {
+  .appbar-header {
+    padding: 0 6px !important;
+    gap: 4px !important;
+  }
+
+  .appbar-mobile-menu-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .appbar-circle-bell-btn {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .appbar-avatar-circle {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+  }
+
+  .page-title {
+    font-size: 17px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. DARK MODE OVERRIDES FOR RESPONSIVE COMPONENTS
+   -------------------------------------------------------------------------- */
+body.dark-mode .sidebar-mobile-close-btn {
+  background: #181822 !important;
+  border-color: #2D2D3B !important;
+  color: #CBD5E1 !important;
+}
+
+body.dark-mode .sidebar-mobile-close-btn:hover {
+  background: #242432 !important;
+  color: #FFFFFF !important;
+}
+
+body.dark-mode .create-event-sticky-bar,
+body.dark-mode .opportunity-sticky-bar,
+body.dark-mode .scheme-sticky-bar {
+  background: rgba(18, 18, 23, 0.98) !important;
+  border-top-color: #272733 !important;
+}
+
 
 

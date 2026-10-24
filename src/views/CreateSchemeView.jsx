@@ -244,6 +244,7 @@ export default function CreateSchemeView() {
           STICKY BOTTOM FOOTER BAR (PAGE 1)
          ======================================================== */}
       <div
+        className="scheme-sticky-bar"
         style={{
           position: 'sticky',
           bottom: 0,
