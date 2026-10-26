@@ -730,7 +730,7 @@ export function AppProvider({ children }) {
         wheelchairAccessible: Boolean(newEvent.wheelchairAccessible),
         signLanguage: Boolean(newEvent.signLanguage),
         capacity: newEvent.capacity ? Number(newEvent.capacity) : 500,
-        status: 'published',
+        status: 'draft',
         orgId: activeOrgId,
         org_id: activeOrgId,
       };
@@ -739,7 +739,7 @@ export function AppProvider({ children }) {
       const ev = normalizeEvent({ ...newEvent, ...(created || {}), id: created?.id || newEvent.id });
       setEvents(prev => [ev, ...prev]);
       setSelectedEventId(ev.id);
-      showToast(`Event "${ev.name}" successfully published!`, 'success');
+      showToast(`Event "${ev.name}" submitted for admin review & approval!`, 'success');
       return ev;
     } catch (err) {
       console.warn('[AppContext] createEvent error:', err);
@@ -747,7 +747,7 @@ export function AppProvider({ children }) {
       const ev = normalizeEvent({
         ...newEvent,
         id: `ev-${Date.now()}`,
-        status: 'published',
+        status: 'draft',
       });
       setEvents(prev => [ev, ...prev]);
       setSelectedEventId(ev.id);
