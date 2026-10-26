@@ -65,6 +65,37 @@ export const jobsApi = {
       return [];
     }
   },
+
+  /**
+   * Update candidate application stage
+   */
+  async updateApplicationStage(jobId, applicationId, stage, reviewerNotes = '') {
+    try {
+      const res = await apiClient.patch(`/jobs/${jobId}/applications/${applicationId}/stage`, {
+        stage,
+        reviewerNotes,
+      });
+      return res?.data || res;
+    } catch {
+      const res = await apiClient.patch(`/applications/${applicationId}/stage`, {
+        stage,
+        reviewerNotes,
+      });
+      return res?.data || res;
+    }
+  },
+
+  /**
+   * Fetch all job applications across the entire organization
+   */
+  async getOrgJobApplications(orgId, params = {}) {
+    try {
+      const res = await apiClient.get(`/organizations/${orgId}/job-applications`, params);
+      return res?.data?.items || res?.data || [];
+    } catch {
+      return [];
+    }
+  },
 };
 
 export default jobsApi;

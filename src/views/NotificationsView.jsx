@@ -366,7 +366,7 @@ export default function NotificationsView() {
                   }}
                   className="notif-feed-card"
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+                  <div className="notif-feed-main" style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
                     {/* Unread indicator */}
                     <div
                       style={{
@@ -436,7 +436,7 @@ export default function NotificationsView() {
                   </div>
 
                   {/* Right side actions & time */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0, marginLeft: '16px' }}>
+                  <div className="notif-feed-actions" style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0, marginLeft: '16px' }}>
                     <span style={{ fontSize: '12px', color: 'var(--neutral-400, #9CA3AF)', whiteSpace: 'nowrap' }}>
                       {notif.time}
                     </span>

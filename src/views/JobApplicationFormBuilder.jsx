@@ -160,6 +160,7 @@ export default function JobApplicationFormBuilder({
           {/* LEFT COLUMN: Standard Candidate Profile Fields */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div
+              className="form-builder-card"
               style={{
                 background: '#FFFFFF',
                 borderRadius: 20,
@@ -365,7 +366,7 @@ export default function JobApplicationFormBuilder({
           {/* RIGHT COLUMN: Custom Screening Questions & Application Settings */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* 1. Custom Screening Questions */}
-            <div style={{ background: '#FFFFFF', borderRadius: 20, border: '1px solid #E2E8F0', padding: '26px 30px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)' }}>
+            <div className="form-builder-card" style={{ background: '#FFFFFF', borderRadius: 20, border: '1px solid #E2E8F0', padding: '26px 30px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: 16, marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(99, 54, 235, 0.08)', color: '#6336EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -432,7 +433,7 @@ export default function JobApplicationFormBuilder({
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {customQuestions.map((q) => (
-                  <div key={q.id} style={{ padding: '12px 14px', background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 10 }}>
+                  <div key={q.id} className="custom-question-card" style={{ padding: '12px 14px', background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -459,6 +460,7 @@ export default function JobApplicationFormBuilder({
 
             {/* 2. Application Rules & Limits */}
             <div
+              className="form-builder-card"
               style={{
                 background: '#FFFFFF',
                 borderRadius: 20,
@@ -577,6 +579,7 @@ export default function JobApplicationFormBuilder({
 
       {/* Sticky Bottom Bar on Form Builder */}
       <div
+        className="opportunity-sticky-bar form-builder-sticky-bar"
         style={{
           position: 'sticky',
           bottom: 0,

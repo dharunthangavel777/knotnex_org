@@ -74,6 +74,7 @@ export default function SchemesView() {
 
   const activeSchemesCount = schemes.filter(s => s.status === 'active').length;
   const completedSchemesCount = schemes.filter(s => s.status === 'completed' || s.status === 'inactive' || s.status === 'upcoming').length;
+  const pendingSchemesCount = schemes.filter(s => s.status === 'pending_verification' || s.status === 'pending').length;
 
   const pendingCount = schemeApplications.filter(a => {
     const st = (a.status || '').toLowerCase();
@@ -88,6 +89,7 @@ export default function SchemesView() {
   const filteredSchemes = schemes.filter(s => {
     if (schemeFilter === 'active' && s.status !== 'active') return false;
     if (schemeFilter === 'completed' && s.status === 'active') return false;
+    if (schemeFilter === 'pending_verification' && s.status !== 'pending_verification' && s.status !== 'pending') return false;
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       return (s.title || '').toLowerCase().includes(q) ||
@@ -290,6 +292,14 @@ export default function SchemesView() {
             >
               Completed ({completedSchemesCount})
             </button>
+            <button
+              type="button"
+              className={`sheets-filter-pill-btn ${schemeFilter === 'pending_verification' ? 'active' : ''}`}
+              id="filterSchemePending"
+              onClick={() => setSchemeFilter('pending_verification')}
+            >
+              Pending Verification ({pendingSchemesCount})
+            </button>
           </div>
 
           <div className="sheets-console-actions">
@@ -391,8 +401,20 @@ export default function SchemesView() {
                             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>account_balance</span>
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: '13.5px', color: 'var(--text-primary)' }}>
-                              {s.title}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 600, fontSize: '13.5px', color: 'var(--text-primary)' }}>
+                                {s.title}
+                              </span>
+                              {(s.status === 'pending_verification' || s.status === 'pending') && (
+                                <span style={{ background: '#FEF0C7', color: '#B54708', border: '1px solid #FEDF89', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Pending Verification
+                                </span>
+                              )}
+                              {s.status === 'rejected' && (
+                                <span style={{ background: '#FEE4E2', color: '#D92D20', border: '1px solid #FECDCA', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Rejected
+                                </span>
+                              )}
                             </div>
                             <div style={{ fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                               {s.eligibility || 'Open to qualified applicants'}

@@ -57,6 +57,65 @@ export const organizationsApi = {
       return [];
     }
   },
+
+  /**
+   * Campaigns CRUD
+   */
+  async getCampaigns(orgId) {
+    try {
+      const res = await apiClient.get(`/organizations/${orgId}/campaigns`);
+      return res?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async createCampaign(orgId, data) {
+    const res = await apiClient.post(`/organizations/${orgId}/campaigns`, data);
+    return res?.data || res;
+  },
+
+  async deleteCampaign(orgId, campaignId) {
+    return await apiClient.delete(`/organizations/${orgId}/campaigns/${campaignId}`);
+  },
+
+  /**
+   * Achievements CRUD
+   */
+  async getAchievements(orgId) {
+    try {
+      const res = await apiClient.get(`/organizations/${orgId}/achievements`);
+      return res?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async createAchievement(orgId, data) {
+    const res = await apiClient.post(`/organizations/${orgId}/achievements`, data);
+    return res?.data || res;
+  },
+
+  async deleteAchievement(orgId, achId) {
+    return await apiClient.delete(`/organizations/${orgId}/achievements/${achId}`);
+  },
+
+  /**
+   * Content Posts
+   */
+  async getContentPosts(authorId) {
+    try {
+      const res = await apiClient.get(`/posts/user/${authorId}`);
+      return res?.data?.items || res?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  async createContentPost(data) {
+    const res = await apiClient.post('/posts', data);
+    return res?.data || res;
+  },
 };
 
 export default organizationsApi;

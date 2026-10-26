@@ -97,6 +97,13 @@ export default function CareerDetailsView() {
           else if (c.stage === 'Offered') nextStage = 'In Review';
           else nextStage = 'Shortlisted';
 
+          // Asynchronously persist candidate stage update to single unified backend
+          if (selectedJob?.id) {
+            jobsApi.updateApplicationStage(selectedJob.id, candidateId, nextStage).catch(err => {
+              console.warn('[CareerDetailsView] Failed to persist stage to backend:', err);
+            });
+          }
+
           showToast(`Candidate ${c.name} moved to ${nextStage}!`, 'success');
           return { ...c, stage: nextStage };
         }

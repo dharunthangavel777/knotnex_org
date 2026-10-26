@@ -68,7 +68,8 @@ export default function EventsView() {
   const totalRevenue = events.reduce((sum, e) => sum + ((Number(e.registered) || 0) * parseTicketPrice(e.ticketPrice)), 0);
 
   const filteredEvents = events.filter(e => {
-    if (filter !== 'all' && e.status !== filter) return false;
+    if (filter === 'pending_verification' && (e.status !== 'pending_verification' && e.status !== 'pending')) return false;
+    if (filter !== 'all' && filter !== 'pending_verification' && e.status !== filter) return false;
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       const match = e.name.toLowerCase().includes(q) ||
@@ -234,6 +235,12 @@ export default function EventsView() {
             >
               Completed ({events.filter(e => e.status === 'completed').length})
             </button>
+            <button
+              className={`sheets-filter-pill-btn ${filter === 'pending_verification' ? 'active' : ''}`}
+              onClick={() => handleFilterChange('pending_verification')}
+            >
+              Pending Verification ({events.filter(e => e.status === 'pending_verification' || e.status === 'pending').length})
+            </button>
           </div>
 
           <div className="sheets-console-actions">
@@ -321,8 +328,20 @@ export default function EventsView() {
                             style={{ width: '44px', height: '44px', borderRadius: '10px', objectFit: 'cover', border: '1px solid #ECECEC' }}
                           />
                           <div>
-                            <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>
-                              {ev.name}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>
+                                {ev.name}
+                              </span>
+                              {(ev.status === 'pending_verification' || ev.status === 'pending') && (
+                                <span style={{ background: '#FEF0C7', color: '#B54708', border: '1px solid #FEDF89', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Pending Verification
+                                </span>
+                              )}
+                              {ev.status === 'rejected' && (
+                                <span style={{ background: '#FEE4E2', color: '#D92D20', border: '1px solid #FECDCA', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Rejected
+                                </span>
+                              )}
                             </div>
                             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                               {ev.location}

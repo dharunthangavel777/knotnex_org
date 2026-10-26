@@ -318,6 +318,7 @@ export default function HelpCenterView() {
 
       {/* Top Mode Bar - Full Page Width */}
       <div
+        className="help-center-top-bar"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -329,6 +330,7 @@ export default function HelpCenterView() {
         }}
       >
         <div
+          className="help-center-mode-pills"
           style={{
             display: 'inline-flex',
             background: 'var(--bg-surface-subtle, #F1F5F9)',

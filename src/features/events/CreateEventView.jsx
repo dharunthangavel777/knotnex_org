@@ -654,6 +654,7 @@ export default function CreateEventView({
 
       {/* Hero Banner */}
       <div
+        className="create-event-cover-banner"
         style={{
           position: 'relative',
           width: '100%',
@@ -893,7 +894,7 @@ export default function CreateEventView({
       </div>
 
       {/* Content Card */}
-      <div style={{ background: '#FFF', borderRadius: '0 0 20px 20px', border: '1px solid #E2E8F0', borderTop: 'none', padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+      <div className="create-event-content-card" style={{ background: '#FFF', borderRadius: '0 0 20px 20px', border: '1px solid #E2E8F0', borderTop: 'none', padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
 
         {/* Editable Event Name */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #F1F5F9', paddingBottom: 16 }}>

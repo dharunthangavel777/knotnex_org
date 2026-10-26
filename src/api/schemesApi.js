@@ -65,6 +65,51 @@ export const schemesApi = {
       return [];
     }
   },
+
+  /**
+   * Fetch single scheme application by ID
+   */
+  async getApplicationById(applicationId) {
+    try {
+      const res = await apiClient.get(`/schemes/applications/${applicationId}`);
+      return res?.data || null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Update scheme application status (approve, reject, under_review)
+   */
+  async updateApplicationStatus(schemeId, applicationId, status, stage = '', reviewerNotes = '') {
+    try {
+      const res = await apiClient.patch(`/schemes/${schemeId}/applications/${applicationId}/status`, {
+        status,
+        stage,
+        reviewerNotes,
+      });
+      return res?.data || res;
+    } catch {
+      const res = await apiClient.patch(`/schemes/applications/${applicationId}/status`, {
+        status,
+        stage,
+        reviewerNotes,
+      });
+      return res?.data || res;
+    }
+  },
+
+  /**
+   * Fetch all scheme applications across the entire organization
+   */
+  async getOrgSchemeApplications(orgId, params = {}) {
+    try {
+      const res = await apiClient.get(`/organizations/${orgId}/scheme-applications`, params);
+      return res?.data?.items || res?.data || [];
+    } catch {
+      return [];
+    }
+  },
 };
 
 export default schemesApi;

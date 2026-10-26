@@ -80,13 +80,15 @@ export default function CareersView() {
     }
   };
 
-  const activeJobsCount = jobs.filter(j => j.status === 'active').length;
+  const activeJobsCount = jobs.filter(j => j.status === 'active' || j.status === 'open').length;
+  const pendingJobsCount = jobs.filter(j => j.status === 'pending_verification' || j.status === 'pending').length;
   const completedJobsCount = jobs.filter(j => j.status === 'closed' || j.status === 'completed').length;
   const totalAppsCount = applications.length;
 
   const filteredJobs = jobs.filter(j => {
-    if (jobFilter === 'active' && j.status !== 'active') return false;
+    if (jobFilter === 'active' && j.status !== 'active' && j.status !== 'open') return false;
     if (jobFilter === 'completed' && j.status !== 'closed' && j.status !== 'completed') return false;
+    if (jobFilter === 'pending_verification' && j.status !== 'pending_verification' && j.status !== 'pending') return false;
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       const match = j.title.toLowerCase().includes(q) ||
@@ -262,6 +264,14 @@ export default function CareersView() {
               >
                 Completed ({completedJobsCount})
               </button>
+              <button
+                type="button"
+                className={`sheets-filter-pill-btn ${jobFilter === 'pending_verification' ? 'active' : ''}`}
+                id="filterJobPending"
+                onClick={() => setJobFilter('pending_verification')}
+              >
+                Pending Verification ({pendingJobsCount})
+              </button>
             </div>
           )}
 
@@ -368,8 +378,20 @@ export default function CareersView() {
                             style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #ECECEC' }}
                           />
                           <div>
-                            <div style={{ fontWeight: 600, fontSize: '13.5px', color: 'var(--text-primary)' }}>
-                              {j.title}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 600, fontSize: '13.5px', color: 'var(--text-primary)' }}>
+                                {j.title}
+                              </span>
+                              {(j.status === 'pending_verification' || j.status === 'pending') && (
+                                <span style={{ background: '#FEF0C7', color: '#B54708', border: '1px solid #FEDF89', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Pending Verification
+                                </span>
+                              )}
+                              {j.status === 'rejected' && (
+                                <span style={{ background: '#FEE4E2', color: '#D92D20', border: '1px solid #FECDCA', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Rejected
+                                </span>
+                              )}
                             </div>
                             <div style={{ fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                               {j.experience || 'Active hiring'}

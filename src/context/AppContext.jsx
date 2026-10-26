@@ -353,15 +353,29 @@ export function AppProvider({ children }) {
 
       const targetOrgId = orgId || activeOrg?.id;
 
-      const [backendEvents, backendJobs, backendSchemes, backendRegs, backendTickets, backendNotifs] =
-        await Promise.allSettled([
-          targetOrgId ? eventsApi.getOrgEvents(targetOrgId) : Promise.resolve([]),
-          targetOrgId ? jobsApi.getOrgJobs(targetOrgId) : Promise.resolve([]),
-          targetOrgId ? schemesApi.getOrgSchemes(targetOrgId) : Promise.resolve([]),
-          targetOrgId ? registrationsApi.getOrgRegistrations(targetOrgId) : Promise.resolve([]),
-          ticketsApi.getTickets(),
-          notificationsApi.getNotifications(),
-        ]);
+      const [
+        backendEvents,
+        backendJobs,
+        backendSchemes,
+        backendRegs,
+        backendTickets,
+        backendNotifs,
+        backendCampaigns,
+        backendAchievements,
+        backendSchemeApps,
+        backendContent,
+      ] = await Promise.allSettled([
+        targetOrgId ? eventsApi.getOrgEvents(targetOrgId) : Promise.resolve([]),
+        targetOrgId ? jobsApi.getOrgJobs(targetOrgId) : Promise.resolve([]),
+        targetOrgId ? schemesApi.getOrgSchemes(targetOrgId) : Promise.resolve([]),
+        targetOrgId ? registrationsApi.getOrgRegistrations(targetOrgId) : Promise.resolve([]),
+        ticketsApi.getTickets(),
+        notificationsApi.getNotifications(),
+        targetOrgId ? organizationsApi.getCampaigns(targetOrgId) : Promise.resolve([]),
+        targetOrgId ? organizationsApi.getAchievements(targetOrgId) : Promise.resolve([]),
+        targetOrgId ? schemesApi.getOrgSchemeApplications(targetOrgId) : Promise.resolve([]),
+        targetOrgId ? organizationsApi.getContentPosts(targetOrgId) : Promise.resolve([]),
+      ]);
 
       if (backendEvents.status === 'fulfilled') {
         const evList = Array.isArray(backendEvents.value) ? backendEvents.value : (backendEvents.value?.items || []);
@@ -406,6 +420,61 @@ export function AppProvider({ children }) {
       if (backendNotifs.status === 'fulfilled') {
         const nList = Array.isArray(backendNotifs.value) ? backendNotifs.value : [];
         setTopNotifications(nList);
+      }
+
+      if (backendCampaigns.status === 'fulfilled') {
+        const cList = Array.isArray(backendCampaigns.value) ? backendCampaigns.value : (backendCampaigns.value?.items || []);
+        setCampaigns(cList.map(c => ({
+          ...c,
+          id: String(c.id),
+          title: c.title || c.name || 'Untitled Campaign',
+          desc: c.description || c.desc || '',
+          audience: c.target_audience || c.audience || 'General Public',
+          goal: Number(c.goal || 0),
+          raised: Number(c.raised || 0),
+          supporters: Number(c.supporters || 0),
+          status: c.status || 'active',
+        })));
+      }
+
+      if (backendAchievements.status === 'fulfilled') {
+        const aList = Array.isArray(backendAchievements.value) ? backendAchievements.value : (backendAchievements.value?.items || []);
+        setAchievements(aList.map(a => ({
+          ...a,
+          id: String(a.id),
+          title: a.title || 'Untitled Achievement',
+          body: a.awarding_body || a.body || '',
+          date: a.year_date || a.date || '2026',
+          desc: a.description || a.desc || '',
+        })));
+      }
+
+      if (backendSchemeApps.status === 'fulfilled') {
+        const sAppList = Array.isArray(backendSchemeApps.value) ? backendSchemeApps.value : (backendSchemeApps.value?.items || []);
+        setSchemeApplications(sAppList.map(a => ({
+          ...a,
+          id: String(a.id),
+          schemeId: a.schemeId || a.scheme_id,
+          schemeTitle: a.schemeTitle || a.scheme_title || 'Grant Scheme',
+          applicant: a.applicant || a.name || 'Applicant Org',
+          name: a.applicant || a.name || 'Applicant Org',
+          orgType: a.orgType || a.org_type || 'NGO',
+          contactPerson: a.contactPerson || a.contact_person || 'Coordinator',
+          email: a.email || a.applicant_email || '',
+          phone: a.phone || a.applicant_phone || '',
+          requestedAmount: a.requestedAmount || (a.requested_amount ? `₹${Number(a.requested_amount).toLocaleString('en-IN')}` : '₹10,00,000'),
+          stage: a.stage || 'Applied',
+          status: a.status || 'Pending',
+          score: a.score || '85%',
+          date: a.date || (a.created_at ? new Date(a.created_at).toLocaleDateString() : 'Recent'),
+        })));
+      }
+
+      if (backendContent.status === 'fulfilled') {
+        const postList = Array.isArray(backendContent.value) ? backendContent.value : (backendContent.value?.items || []);
+        if (postList.length > 0) {
+          setContentPosts(postList);
+        }
       }
     } catch (e) {
       console.warn('[AppContext] Error loading backend data:', e);
@@ -730,24 +799,24 @@ export function AppProvider({ children }) {
         wheelchairAccessible: Boolean(newEvent.wheelchairAccessible),
         signLanguage: Boolean(newEvent.signLanguage),
         capacity: newEvent.capacity ? Number(newEvent.capacity) : 500,
-        status: 'published',
+        status: newEvent.status || 'pending_verification',
         orgId: activeOrgId,
         org_id: activeOrgId,
       };
 
       const created = await eventsApi.createEvent(payload);
-      const ev = normalizeEvent({ ...newEvent, ...(created || {}), id: created?.id || newEvent.id });
+      const ev = normalizeEvent({ ...newEvent, ...(created || {}), id: created?.id || newEvent.id, status: created?.status || 'pending_verification' });
       setEvents(prev => [ev, ...prev]);
       setSelectedEventId(ev.id);
-      showToast(`Event "${ev.name}" successfully published!`, 'success');
+      showToast(`Event "${ev.name}" submitted for Admin Verification!`, 'success');
       return ev;
     } catch (err) {
       console.warn('[AppContext] createEvent error:', err);
-      showToast(`Event created locally (${err.message})`, 'info');
+      showToast(`Event saved locally (${err.message})`, 'info');
       const ev = normalizeEvent({
         ...newEvent,
         id: `ev-${Date.now()}`,
-        status: 'published',
+        status: 'pending_verification',
       });
       setEvents(prev => [ev, ...prev]);
       setSelectedEventId(ev.id);
@@ -813,24 +882,24 @@ export function AppProvider({ children }) {
         disabilityAccommodations: Array.isArray(newJob.accommodations) ? newJob.accommodations : [],
         minSalary: Number(newJob.minSalary || 350000),
         maxSalary: Number(newJob.maxSalary || 650000),
-        status: 'open',
+        status: newJob.status || 'pending_verification',
         orgId: activeOrgId,
         org_id: activeOrgId,
       };
 
       const created = await jobsApi.createJob(payload);
-      const job = normalizeJob({ ...newJob, ...(created || {}), id: created?.id || newJob.id });
+      const job = normalizeJob({ ...newJob, ...(created || {}), id: created?.id || newJob.id, status: created?.status || 'pending_verification' });
       setJobs(prev => [job, ...prev]);
       setSelectedJobId(job.id);
-      showToast(`Opportunity "${job.title}" published!`, 'success');
+      showToast(`Opportunity "${job.title}" submitted for Admin Verification!`, 'success');
       return job;
     } catch (err) {
       console.warn('[AppContext] createJob error:', err);
-      showToast(`Opportunity created locally (${err.message})`, 'info');
+      showToast(`Opportunity saved locally (${err.message})`, 'info');
       const job = normalizeJob({
         ...newJob,
         id: `job-${Date.now()}`,
-        status: 'active',
+        status: 'pending_verification',
       });
       setJobs(prev => [job, ...prev]);
       setSelectedJobId(job.id);
@@ -882,16 +951,16 @@ export function AppProvider({ children }) {
         benefits: Array.isArray(newScheme.benefits) ? newScheme.benefits : [],
         documentsRequired: Array.isArray(newScheme.documents) ? newScheme.documents : (newScheme.documentsRequired || []),
         applicationDeadline: newScheme.deadline || undefined,
-        status: 'active',
+        status: newScheme.status || 'pending_verification',
         orgId: activeOrgId,
         org_id: activeOrgId,
       };
 
       const created = await schemesApi.createScheme(payload);
-      const scheme = normalizeScheme({ ...newScheme, ...(created || {}), id: created?.id || newScheme.id });
+      const scheme = normalizeScheme({ ...newScheme, ...(created || {}), id: created?.id || newScheme.id, status: created?.status || 'pending_verification' });
       setSchemes(prev => [scheme, ...prev]);
       setSelectedSchemeId(scheme.id);
-      showToast(`Grant scheme "${scheme.title}" launched!`, 'success');
+      showToast(`Grant scheme "${scheme.title}" submitted for Admin Verification!`, 'success');
       return scheme;
     } catch (err) {
       console.warn('[AppContext] createScheme error:', err);
@@ -899,7 +968,7 @@ export function AppProvider({ children }) {
       const scheme = normalizeScheme({
         ...newScheme,
         id: `sch-${Date.now()}`,
-        status: 'active',
+        status: 'pending_verification',
       });
       setSchemes(prev => [scheme, ...prev]);
       setSelectedSchemeId(scheme.id);
@@ -927,8 +996,22 @@ export function AppProvider({ children }) {
     showToast('Scheme deleted successfully.', 'info');
   };
 
-  const updateSchemeApplication = (appId, updatedData) => {
-    setSchemeApplications(prev => prev.map(a => (a.id === appId ? { ...a, ...updatedData } : a)));
+  const updateSchemeApplication = async (appId, updatedData) => {
+    try {
+      const currentApp = schemeApplications.find(a => String(a.id) === String(appId));
+      const schemeId = currentApp?.schemeId || currentApp?.scheme_id || selectedSchemeId || 'general';
+      await schemesApi.updateApplicationStatus(
+        schemeId,
+        appId,
+        updatedData.status || updatedData.stage,
+        updatedData.stage,
+        updatedData.reviewerNotes || updatedData.notes
+      );
+    } catch (err) {
+      console.warn('[AppContext] updateSchemeApplication error:', err);
+    }
+    setSchemeApplications(prev => prev.map(a => (String(a.id) === String(appId) ? { ...a, ...updatedData } : a)));
+    showToast('Grant application status updated.', 'success');
   };
 
   const selectSchemeApplication = (appOrId, returnView = 'schemes') => {
@@ -938,41 +1021,137 @@ export function AppProvider({ children }) {
     navigateTo('schemeApplicationDetails');
   };
 
-  // Campaign Helpers
-  const addCampaign = (newCamp) => {
-    const camp = {
-      ...newCamp,
-      id: `camp-${Date.now()}`,
-      status: 'active',
-      spend: '$0',
-      reach: '0',
-      conversions: 0
-    };
-    setCampaigns(prev => [camp, ...prev]);
-    showToast(`Campaign "${camp.name}" launched!`, 'success');
+  // Campaign Helpers (Backend Connected)
+  const addCampaign = async (newCamp) => {
+    try {
+      const activeOrgId = orgProfile?.id;
+      let created = null;
+      if (activeOrgId) {
+        created = await organizationsApi.createCampaign(activeOrgId, newCamp);
+      }
+      const camp = {
+        ...newCamp,
+        ...(created || {}),
+        id: String(created?.id || `camp-${Date.now()}`),
+        title: newCamp.title || created?.title || 'New Campaign',
+        status: newCamp.status || created?.status || 'active',
+        goal: Number(newCamp.goal || created?.goal || 50000),
+        raised: Number(newCamp.raised || created?.raised || 0),
+        supporters: Number(newCamp.supporters || created?.supporters || 0),
+        audience: newCamp.audience || created?.target_audience || 'General Public',
+        desc: newCamp.desc || created?.description || '',
+      };
+      setCampaigns(prev => [camp, ...prev]);
+      showToast(`Campaign "${camp.title}" launched!`, 'success');
+      return camp;
+    } catch (err) {
+      console.warn('[AppContext] addCampaign error:', err);
+      const camp = {
+        ...newCamp,
+        id: `camp-${Date.now()}`,
+        status: newCamp.status || 'active',
+        goal: Number(newCamp.goal || 50000),
+        raised: 0,
+        supporters: 0,
+        audience: newCamp.audience || 'General Public',
+        desc: newCamp.desc || '',
+      };
+      setCampaigns(prev => [camp, ...prev]);
+      showToast(`Campaign saved locally`, 'info');
+      return camp;
+    }
   };
 
-  // Achievement Helpers
-  const addAchievement = (newAch) => {
-    const ach = {
-      ...newAch,
-      id: `ach-${Date.now()}`
-    };
-    setAchievements(prev => [ach, ...prev]);
-    showToast(`Achievement "${ach.title}" added to showcase!`, 'success');
+  const deleteCampaign = async (campId) => {
+    try {
+      const activeOrgId = orgProfile?.id;
+      if (activeOrgId) {
+        await organizationsApi.deleteCampaign(activeOrgId, campId);
+      }
+    } catch (err) {
+      console.warn('[AppContext] deleteCampaign error:', err);
+    }
+    setCampaigns(prev => prev.filter(c => String(c.id) !== String(campId)));
+    showToast('Campaign removed.', 'info');
   };
 
-  // Content Helpers
-  const addContentPost = (newPost) => {
-    const post = {
-      ...newPost,
-      id: `cnt-${Date.now()}`,
-      author: 'Arthur Taylor',
-      date: 'Today',
-      status: 'Published'
-    };
-    setContentPosts(prev => [post, ...prev]);
-    showToast(`Published "${post.title}" to portal!`, 'success');
+  // Achievement Helpers (Backend Connected)
+  const addAchievement = async (newAch) => {
+    try {
+      const activeOrgId = orgProfile?.id;
+      let created = null;
+      if (activeOrgId) {
+        created = await organizationsApi.createAchievement(activeOrgId, newAch);
+      }
+      const ach = {
+        ...newAch,
+        ...(created || {}),
+        id: String(created?.id || `ach-${Date.now()}`),
+        title: newAch.title || created?.title || '',
+        body: newAch.body || created?.awarding_body || '',
+        date: newAch.date || created?.year_date || '2026',
+        desc: newAch.desc || created?.description || '',
+      };
+      setAchievements(prev => [ach, ...prev]);
+      showToast(`Achievement "${ach.title}" added to showcase!`, 'success');
+      return ach;
+    } catch (err) {
+      console.warn('[AppContext] addAchievement error:', err);
+      const ach = {
+        ...newAch,
+        id: `ach-${Date.now()}`,
+      };
+      setAchievements(prev => [ach, ...prev]);
+      showToast(`Achievement saved locally`, 'info');
+      return ach;
+    }
+  };
+
+  const deleteAchievement = async (achId) => {
+    try {
+      const activeOrgId = orgProfile?.id;
+      if (activeOrgId) {
+        await organizationsApi.deleteAchievement(activeOrgId, achId);
+      }
+    } catch (err) {
+      console.warn('[AppContext] deleteAchievement error:', err);
+    }
+    setAchievements(prev => prev.filter(a => String(a.id) !== String(achId)));
+    showToast('Achievement removed.', 'info');
+  };
+
+  // Content Helpers (Backend Connected)
+  const addContentPost = async (newPost) => {
+    try {
+      const activeOrgId = orgProfile?.id;
+      let created = null;
+      if (activeOrgId) {
+        created = await organizationsApi.createContentPost(activeOrgId, newPost);
+      }
+      const post = {
+        ...newPost,
+        ...(created || {}),
+        id: String(created?.id || `cnt-${Date.now()}`),
+        author: newPost.author || accountSettings?.displayName || 'Arthur Taylor',
+        date: newPost.date || 'Today',
+        status: newPost.status || 'Published',
+      };
+      setContentPosts(prev => [post, ...prev]);
+      showToast(`Published "${post.title}" to portal!`, 'success');
+      return post;
+    } catch (err) {
+      console.warn('[AppContext] addContentPost error:', err);
+      const post = {
+        ...newPost,
+        id: `cnt-${Date.now()}`,
+        author: newPost.author || accountSettings?.displayName || 'Arthur Taylor',
+        date: newPost.date || 'Today',
+        status: newPost.status || 'Published',
+      };
+      setContentPosts(prev => [post, ...prev]);
+      showToast(`Published "${post.title}" to portal!`, 'success');
+      return post;
+    }
   };
 
   // Organization Profile Update (Backend Connected)
@@ -1030,10 +1209,15 @@ export function AppProvider({ children }) {
     showToast(`Pass credential ${newReg.ticketCode || ''} issued for ${newReg.name}!`, 'success');
   };
 
-  // Ticket Status update
-  const updateTicketStatus = (ticketId, status) => {
+  // Ticket Status update (Backend Connected)
+  const updateTicketStatus = async (ticketId, status) => {
+    try {
+      await ticketsApi.updateTicketStatus(ticketId, status);
+    } catch (err) {
+      console.warn('[AppContext] updateTicketStatus error:', err);
+    }
     setTickets(prev =>
-      prev.map(t => (t.id === ticketId ? { ...t, status } : t))
+      prev.map(t => (String(t.id) === String(ticketId) ? { ...t, status } : t))
     );
     showToast(`Ticket status updated to ${status}.`, 'info');
   };
@@ -1147,7 +1331,9 @@ export function AppProvider({ children }) {
     setSchemeApplications,
     updateOrgProfile,
     addCampaign,
+    deleteCampaign,
     addAchievement,
+    deleteAchievement,
     addContentPost,
     checkInAttendee,
     updateRegistrationStatus,

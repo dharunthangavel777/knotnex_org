@@ -178,6 +178,7 @@ export default function EventRegistrationFormBuilder({
           {/* LEFT COLUMN: Standard Attendee Profile Fields (Stretches Full Height) */}
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}>
             <div
+              className="form-builder-card"
               style={{
                 background: '#FFFFFF',
                 borderRadius: 20,
@@ -388,7 +389,7 @@ export default function EventRegistrationFormBuilder({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, flex: 1, height: '100%' }}>
             
             {/* 1. Custom Questions */}
-            <div style={{ background: '#FFFFFF', borderRadius: 20, border: '1px solid #E2E8F0', padding: '26px 30px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)' }}>
+            <div className="form-builder-card" style={{ background: '#FFFFFF', borderRadius: 20, border: '1px solid #E2E8F0', padding: '26px 30px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: 16, marginBottom: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(99, 54, 235, 0.08)', color: '#6336EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -455,7 +456,7 @@ export default function EventRegistrationFormBuilder({
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {customQuestions.map(q => (
-                  <div key={q.id} style={{ padding: '12px 14px', background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 10 }}>
+                  <div key={q.id} className="custom-question-card" style={{ padding: '12px 14px', background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -482,6 +483,7 @@ export default function EventRegistrationFormBuilder({
 
             {/* 2. Registration Capacity & Rules (Stretches to Balance Left Column) */}
             <div
+              className="form-builder-card"
               style={{
                 background: '#FFFFFF',
                 borderRadius: 20,
@@ -667,9 +669,11 @@ export default function EventRegistrationFormBuilder({
       </section>
 
       {/* Sticky Bottom Bar: Back on left; Save Draft before Publish on right */}
-      <div style={{
-        position: 'sticky',
-        bottom: 0,
+      <div
+        className="create-event-sticky-bar form-builder-sticky-bar"
+        style={{
+          position: 'sticky',
+          bottom: 0,
         zIndex: 50,
         background: 'rgba(255, 255, 255, 0.98)',
         backdropFilter: 'blur(16px)',

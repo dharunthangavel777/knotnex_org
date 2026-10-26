@@ -14712,6 +14712,57 @@ html, body {
   display: none;
 }
 
+/* Universal Responsive Text Safety */
+.page-title,
+.page-subtitle,
+.event-main-title,
+.event-sub-desc,
+.studio-card-title,
+.studio-card-desc,
+.card-title,
+.card-description,
+.module-stat-label,
+.module-stat-value,
+.module-stat-subtext,
+.sheets-count-label,
+.filter-chip-btn,
+.segmented-tab-btn,
+.notif-feed-card p,
+.notif-feed-card span {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+/* Universal Icon Protection (Prevent Icon Squishing in Flex Layouts) */
+.header-icon-box svg,
+.module-stat-icon-wrap svg,
+.studio-card-icon-box svg,
+.qa-linear-icon svg,
+.btn-icon-square svg,
+.btn-back-circle svg,
+.appbar-circle-bell-btn svg,
+.circle-action-btn svg,
+.notif-feed-card svg,
+.badge-trend-pos svg,
+.badge-trend-neg svg,
+.hero-meta-chip svg,
+.sheets-filter-pill-btn svg,
+.segmented-tab-btn svg,
+.status-icon,
+.action-icon-btn svg,
+.table-actions svg {
+  flex-shrink: 0 !important;
+}
+
+.header-icon-box,
+.module-stat-icon-wrap,
+.studio-card-icon-box,
+.qa-linear-icon,
+.btn-icon-square,
+.btn-back-circle {
+  flex-shrink: 0 !important;
+}
+
 /* --------------------------------------------------------------------------
    1. TABLET LANDSCAPE & DESKTOPS (<= 1100px)
    -------------------------------------------------------------------------- */
@@ -14903,6 +14954,98 @@ html, body {
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     padding: 8px 14px !important;
+  }
+
+  /* Event Details, Breadcrumbs and Header Actions on Tablet */
+  .event-header-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .event-title-cluster {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .event-heading-text {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .event-header-actions-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .event-header-actions-group button,
+  .event-header-actions-group .btn-header-action {
+    flex: 1 1 auto !important;
+    min-width: 100px !important;
+    justify-content: center !important;
+  }
+
+  .event-breadcrumb-bar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    white-space: nowrap !important;
+    width: 100% !important;
+    padding-bottom: 2px !important;
+  }
+
+  .event-breadcrumb-bar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .segmented-tabs-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    padding: 4px !important;
+  }
+
+  .segmented-tabs-wrapper::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .segmented-tab-btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .filter-toolbar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .filter-left-controls {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    flex-wrap: nowrap !important;
+    display: flex !important;
+    gap: 8px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .filter-left-controls::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .filter-chip-btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 }
 
@@ -15145,6 +15288,135 @@ html, body {
     width: 100% !important;
     max-width: 100vw !important;
   }
+
+  /* Notification Feed Cards */
+  .notif-feed-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px 14px !important;
+  }
+
+  .notif-feed-main {
+    width: 100% !important;
+  }
+
+  .notif-feed-actions {
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding-top: 10px !important;
+    border-top: 1px solid var(--border-default, #F1F5F9) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  .notif-feed-actions button {
+    height: 32px !important;
+    font-size: 12px !important;
+  }
+
+  /* Support / Help Center Top Bar */
+  .help-center-top-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .help-center-mode-pills {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    display: flex !important;
+  }
+
+  .help-center-mode-pills::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .help-center-mode-pills button {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 7px 14px !important;
+    font-size: 12.5px !important;
+  }
+
+  /* Filter Controls Mobile Stacking */
+  .filter-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .filter-right-controls {
+    width: 100% !important;
+  }
+
+  .filter-right-controls .knotnex-search-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Card Grids */
+  .content-grid-3,
+  .event-cards-grid,
+  .schemes-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* Create Form Cards & Cover Banners */
+  .create-event-cover-banner {
+    height: 180px !important;
+    border-radius: 14px !important;
+  }
+
+  .create-event-content-card {
+    padding: 16px 14px !important;
+    border-radius: 0 0 14px 14px !important;
+    gap: 16px !important;
+  }
+
+  .form-builder-card {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .custom-question-card {
+    padding: 10px 12px !important;
+  }
+
+  /* Event / Scheme / Career Hero Banners */
+  .event-hero-banner-card {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .event-hero-top-row {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .event-hero-meta-chips {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* Table cells padding & font sizing */
+  .recent-products-table th,
+  .recent-products-table td,
+  .sheets-table th,
+  .sheets-table td,
+  .attendee-table th,
+  .attendee-table td,
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px !important;
+    font-size: 12.5px !important;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -15270,6 +15542,38 @@ html, body {
     max-width: 100% !important;
     font-size: 12.5px !important;
   }
+
+  /* Compact View Details on Mobile */
+  .event-main-title {
+    font-size: 17px !important;
+  }
+
+  .event-sub-desc {
+    font-size: 12px !important;
+  }
+
+  .create-event-cover-banner {
+    height: 150px !important;
+  }
+
+  .btn-back-circle {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .event-detail-poster-wrap {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .sheets-filter-pill-btn,
+  .recent-act-filter-btn,
+  .attendee-filter-pill-btn,
+  .segmented-tab-btn,
+  .filter-chip-btn {
+    padding: 5px 10px !important;
+    font-size: 11.5px !important;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -15322,9 +15626,30 @@ body.dark-mode .sidebar-mobile-close-btn:hover {
 
 body.dark-mode .create-event-sticky-bar,
 body.dark-mode .opportunity-sticky-bar,
-body.dark-mode .scheme-sticky-bar {
+body.dark-mode .scheme-sticky-bar,
+body.dark-mode .form-builder-sticky-bar {
   background: rgba(18, 18, 23, 0.98) !important;
   border-top-color: #272733 !important;
+}
+
+body.dark-mode .notif-feed-actions {
+  border-top-color: #272733 !important;
+}
+
+body.dark-mode .create-event-content-card,
+body.dark-mode .form-builder-card {
+  background: #181822 !important;
+  border-color: #272733 !important;
+}
+
+body.dark-mode .custom-question-card {
+  background: #1C1C28 !important;
+  border-color: #2D2D3B !important;
+}
+
+body.dark-mode .help-center-mode-pills {
+  background: #1C1C28 !important;
+  border-color: #2D2D3B !important;
 }
 
 
