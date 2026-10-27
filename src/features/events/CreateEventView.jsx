@@ -12,6 +12,8 @@ import EventEligibilityScreen from './components/EventEligibilityScreen';
 import EventRegistrationFormBuilder from './components/EventRegistrationFormBuilder';
 import BackButton from '../../components/common/BackButton';
 import CreateEventSkeleton from '../../components/skeletons/pages/CreateEventSkeleton';
+import EventAutoFillFloatingButton from './components/EventAutoFillFloatingButton';
+import { EVENT_PRESETS } from './data/testEventPresets';
 
 function parseEventData(ev) {
   if (!ev) {
@@ -116,6 +118,89 @@ export default function CreateEventView({
   const [currentStep, setCurrentStep] = useState('details'); // 'details' | 'eligibility' | 'formBuilder'
   const [isStepLoading, setIsStepLoading] = useState(false);
   const [draftEventData, setDraftEventData] = useState(() => (editingEvent ? { ...editingEvent, poster: initData.coverImage, sessions: initData.sessions } : null));
+  const [currentPresetId, setCurrentPresetId] = useState(null);
+
+  const handleApplyPreset = (preset) => {
+    if (!preset) return;
+    setName(preset.name);
+    setEventDate(preset.eventDate);
+    setEventTime(preset.eventTime);
+    setLocation(preset.location);
+    setDescription(preset.description);
+    setCategory(preset.category);
+    setCapacity(preset.capacity);
+    setTicketPrice(preset.ticketPrice);
+    setSpeakers(preset.speakers);
+    setOrganizerName(preset.organizerName);
+    setOrganizerEmail(preset.organizerEmail);
+    setOrganizerPhone(preset.organizerPhone);
+    setCoverImage(preset.coverImage);
+    setOriginalCoverImage(preset.originalCoverImage || preset.coverImage);
+    setSessions(preset.sessions || []);
+    setCurrentPresetId(preset.id);
+
+    setDraftEventData({
+      ...(editingEvent || {}),
+      id: editingEvent ? editingEvent.id : ('ev-test-' + Date.now()),
+      name: preset.name,
+      poster: preset.coverImage,
+      originalPoster: preset.originalCoverImage || preset.coverImage,
+      date: preset.eventDate + (preset.eventTime ? ' • ' + preset.eventTime : ''),
+      time: preset.eventTime,
+      location: preset.location,
+      category: preset.category,
+      capacity: preset.capacity ? Number(preset.capacity) : null,
+      ticketPrice: preset.ticketPrice,
+      registered: editingEvent?.registered ?? 0,
+      status: editingEvent?.status || 'upcoming',
+      description: preset.description,
+      speakers: preset.speakers ? preset.speakers.split(',').map(s => s.trim()).filter(Boolean) : [],
+      chiefGuests: preset.chiefGuests || [],
+      sponsors: preset.sponsors || [],
+      photos: [],
+      documents: [],
+      organizer: preset.organizerName,
+      organizedBy: preset.organizerData,
+      organizerData: preset.organizerData,
+      volunteersNeeded: preset.volunteersNeeded ?? false,
+      volunteerRole: preset.volunteerRole || '',
+      volunteerOpenings: preset.volunteerOpenings || 0,
+      contact: preset.contact,
+      supportContact: [
+        { id: 'email', label: 'Email', icon: 'mail', value: preset.contact?.email || preset.organizerEmail },
+        { id: 'call', label: 'Call Organizer', icon: 'phone', value: preset.contact?.phone || preset.organizerPhone },
+        { id: 'help', label: 'Event Help Desk', icon: 'help', value: preset.contact?.helpDesk || '' }
+      ],
+      eligibilityCriteria: preset.eligibilityCriteria || [],
+      faqs: preset.faqs || [],
+      sessions: preset.sessions || []
+    });
+
+    if (addToast) {
+      addToast(`✨ Auto-filled with test event: "${preset.name}"`, 'success');
+    }
+  };
+
+  const handleClearForm = () => {
+    setName('');
+    setEventDate('');
+    setEventTime('');
+    setLocation('');
+    setDescription('');
+    setCategory('');
+    setCapacity('');
+    setTicketPrice('');
+    setSpeakers('');
+    setOrganizerName('');
+    setOrganizerEmail('');
+    setOrganizerPhone('');
+    setCoverImage(null);
+    setOriginalCoverImage(null);
+    setSessions([]);
+    setDraftEventData(null);
+    setCurrentPresetId(null);
+    if (addToast) addToast('Event form reset.', 'info');
+  };
 
   const changeStep = (nextStep) => {
     setIsStepLoading(true);
@@ -318,6 +403,22 @@ export default function CreateEventView({
     if (!eventDate.trim()) { if (addToast) addToast('Event date is required.', 'error'); return; }
     if (!location.trim()) { if (addToast) addToast('Location is required.', 'error'); return; }
     if (!description.trim()) { if (addToast) addToast('Event description is required.', 'error'); return; }
+
+    setDraftEventData(prev => ({
+      ...(prev || {}),
+      name: name.trim(),
+      poster: coverImage || prev?.poster || null,
+      originalPoster: originalCoverImage || coverImage || prev?.originalPoster || null,
+      date: eventDate + (eventTime ? ' • ' + eventTime : ''),
+      time: eventTime,
+      location: location.trim(),
+      category: category.trim() || prev?.category || '',
+      capacity: capacity ? Number(capacity) : (prev?.capacity ?? null),
+      ticketPrice: ticketPrice.trim() || prev?.ticketPrice || '',
+      description: description.trim(),
+      sessions: sessions || prev?.sessions || []
+    }));
+
     changeStep('eligibility');
   };
 
@@ -619,6 +720,8 @@ export default function CreateEventView({
         onBack={() => changeStep('details')}
         onNext={handleProceedToFormBuilder}
         onSaveDraft={handleSaveEligibilityDraft}
+        onAutoFill={handleApplyPreset}
+        currentPresetId={currentPresetId}
         addToast={addToast}
       />
     );
@@ -641,15 +744,51 @@ export default function CreateEventView({
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 80px)', position: 'relative' }}>
       <section className="app-view active" id="viewCreateEvent" style={{ paddingBottom: 32, flex: 1 }}>
 
-      {/* Top Header Row: Back button */}
+      {/* Top Header Row: Back button & Quick Auto-Fill */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <BackButton onClick={handleBack} />
-        {editingEvent && (
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#6336EB', background: 'rgba(99, 54, 235, 0.08)', padding: '5px 14px', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#6336EB', display: 'inline-block' }}></span>
-            Editing Event
-          </span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <BackButton onClick={handleBack} />
+          {editingEvent && (
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#6336EB', background: 'rgba(99, 54, 235, 0.08)', padding: '5px 14px', borderRadius: 20, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#6336EB', display: 'inline-block' }}></span>
+              Editing Event
+            </span>
+          )}
+        </div>
+
+        {/* Header Auto-Fill Quick Action */}
+        <button
+          type="button"
+          onClick={() => handleApplyPreset(EVENT_PRESETS[0])}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            background: 'rgba(99, 54, 235, 0.07)',
+            border: '1.5px solid rgba(99, 54, 235, 0.22)',
+            borderRadius: 20,
+            padding: '6px 14px',
+            fontSize: 12.5,
+            fontWeight: 700,
+            color: '#6336EB',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = '#6336EB';
+            e.currentTarget.style.color = '#FFF';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 54, 235, 0.25)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(99, 54, 235, 0.07)';
+            e.currentTarget.style.color = '#6336EB';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          title="Auto fill all fields with test event data"
+        >
+          <span>✨</span>
+          <span>Auto Fill Test Data</span>
+        </button>
       </div>
 
       {/* Hero Banner */}
@@ -1187,6 +1326,13 @@ export default function CreateEventView({
           </button>
         </div>
       </div>
+
+      {/* Floating Action Button for Instant Auto-Fill & Preset Selection */}
+      <EventAutoFillFloatingButton
+        onApplyPreset={handleApplyPreset}
+        onClearForm={handleClearForm}
+        currentPresetId={currentPresetId}
+      />
     </div>
   );
 }

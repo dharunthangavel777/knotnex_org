@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BackButton from '../../../components/common/BackButton';
+import EventAutoFillFloatingButton from './EventAutoFillFloatingButton';
+import { EVENT_PRESETS } from '../data/testEventPresets';
 
 export default function EventEligibilityScreen({
   eventName,
@@ -17,6 +19,8 @@ export default function EventEligibilityScreen({
   onBack,
   onNext,
   onSaveDraft,
+  onAutoFill,
+  currentPresetId,
   addToast
 }) {
   useEffect(() => {
@@ -104,7 +108,47 @@ export default function EventEligibilityScreen({
   const [sponsorForm, setSponsorForm] = useState({ name: '', role: '' });
 
   const [isAddingFaq, setIsAddingFaq] = useState(false);
-  const [faqForm, setFaqForm] = useState({ q: '', a: '' });
+  const handleApplyPreset = (preset) => {
+    if (!preset) return;
+    setRules(preset.eligibilityCriteria || []);
+    setSpeakers(preset.chiefGuests || []);
+    setSponsors(preset.sponsors || []);
+    if (preset.organizerData) {
+      setOrganizer(preset.organizerData);
+      setOrgNameInput(preset.organizerData.name || '');
+      setOrgSubtitleInput(preset.organizerData.subtitle || '');
+    }
+    setVolunteersNeeded(preset.volunteersNeeded ?? false);
+    setVolunteerRole(preset.volunteerRole || '');
+    setVolunteerOpenings(preset.volunteerOpenings || 0);
+    if (preset.contact) {
+      setContact(preset.contact);
+      setContactEmailInput(preset.contact.email || '');
+      setContactPhoneInput(preset.contact.phone || '');
+      setContactHelpDeskInput(preset.contact.helpDesk || '');
+    }
+    setFaqs(preset.faqs || []);
+
+    if (onAutoFill) {
+      onAutoFill(preset);
+    }
+    if (addToast) {
+      addToast(`✨ Eligibility updated with test data: "${preset.name}"`, 'success');
+    }
+  };
+
+  const handleClearEligibility = () => {
+    setRules([]);
+    setSpeakers([]);
+    setSponsors([]);
+    setPhotos([]);
+    setDocuments([]);
+    setVolunteersNeeded(false);
+    setVolunteerRole('');
+    setVolunteerOpenings(0);
+    setFaqs([]);
+    if (addToast) addToast('Eligibility criteria cleared.', 'info');
+  };
 
   // Handlers for Rules
   const handleAddRule = () => {
@@ -254,9 +298,41 @@ export default function EventEligibilityScreen({
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 80px)', position: 'relative' }}>
       <section className="app-view active" id="viewCreateEventEligibility" style={{ paddingBottom: '32px', flex: 1, width: '100%', boxSizing: 'border-box' }}>
         
-        {/* Top Header Row: ONLY Back Arrow and 'Back' text, NO bulky titles or event pills */}
-        <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 20px 0' }}>
+        {/* Top Header Row: Back Arrow and Quick Auto-Fill */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 20px 0' }}>
           <BackButton onClick={onBack} />
+          <button
+            type="button"
+            onClick={() => handleApplyPreset(EVENT_PRESETS[0])}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 7,
+              background: 'rgba(99, 54, 235, 0.07)',
+              border: '1.5px solid rgba(99, 54, 235, 0.22)',
+              borderRadius: 20,
+              padding: '6px 14px',
+              fontSize: 12.5,
+              fontWeight: 700,
+              color: '#6336EB',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = '#6336EB';
+              e.currentTarget.style.color = '#FFF';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 54, 235, 0.25)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(99, 54, 235, 0.07)';
+              e.currentTarget.style.color = '#6336EB';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            title="Auto fill eligibility criteria with test data"
+          >
+            <span>✨</span>
+            <span>Auto Fill Criteria</span>
+          </button>
         </div>
 
         {/* 2-Column Grid Filling Center Completely */}
@@ -936,6 +1012,13 @@ export default function EventEligibilityScreen({
           </button>
         </div>
       </div>
+
+      {/* Floating Action Button for Instant Auto-Fill & Preset Selection */}
+      <EventAutoFillFloatingButton
+        onApplyPreset={handleApplyPreset}
+        onClearForm={handleClearEligibility}
+        currentPresetId={currentPresetId}
+      />
     </div>
   );
 }

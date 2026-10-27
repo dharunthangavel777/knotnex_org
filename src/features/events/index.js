@@ -11,3 +11,5 @@ export { default as CoverCropScreen } from './components/CoverCropScreen';
 export { default as EventEligibilityScreen } from './components/EventEligibilityScreen';
 export { default as EventRegistrationFormBuilder } from './components/EventRegistrationFormBuilder';
 export { default as PencilIcon } from './components/PencilIcon';
+export { default as EventAutoFillFloatingButton } from './components/EventAutoFillFloatingButton';
+export * from './data/testEventPresets';
