@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "knotnex-f68fd",
     "public": "dist",
     "ignore": [
       "firebase.json",
