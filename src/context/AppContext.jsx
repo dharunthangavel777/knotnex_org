@@ -108,7 +108,7 @@ export const normalizeRegistration = (r, idx = 0) => ({
 });
 
 const defaultOrgProfile = {
-  id: '',
+  id: '20000000-0000-0000-0000-000000000001',
   name: 'KnotNex Organization',
   slug: 'knotnex-org',
   type: 'NGO',
@@ -130,7 +130,7 @@ const defaultKnowledgeCategories = [
   { id: 'cat-4', name: 'Gate Scanner & Check-in', count: 5 },
 ];
 
-const AppContext = createContext(null);
+export const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   // Navigation & UI Layout State
@@ -275,7 +275,11 @@ export function AppProvider({ children }) {
   const [orgProfile, setOrgProfile] = useState(() => {
     try {
       const stored = localStorage.getItem('knotnex_org');
-      return stored ? JSON.parse(stored) : defaultOrgProfile;
+      const parsed = stored ? JSON.parse(stored) : defaultOrgProfile;
+      if (parsed && (!parsed.id || parsed.id === '')) {
+        parsed.id = '20000000-0000-0000-0000-000000000001';
+      }
+      return parsed;
     } catch {
       return defaultOrgProfile;
     }
@@ -388,7 +392,7 @@ export function AppProvider({ children }) {
         }
       }
 
-      const targetOrgId = orgId || activeOrg?.id;
+      const targetOrgId = orgId || activeOrg?.id || orgProfile?.id || '20000000-0000-0000-0000-000000000001';
 
       const [
         backendEvents,
@@ -914,7 +918,7 @@ export function AppProvider({ children }) {
 
   const addJob = async (newJob) => {
     try {
-      const activeOrgId = orgProfile?.id;
+      const activeOrgId = orgProfile?.id || '20000000-0000-0000-0000-000000000001';
       const jType = (newJob.type && ['full-time', 'part-time', 'internship', 'volunteer', 'contract'].includes(newJob.type.toLowerCase()))
         ? newJob.type.toLowerCase() : 'full-time';
       const locType = (newJob.location && newJob.location.toLowerCase().includes('remote')) ? 'remote' : 'on-site';
@@ -994,7 +998,7 @@ export function AppProvider({ children }) {
 
   const addScheme = async (newScheme) => {
     try {
-      const activeOrgId = orgProfile?.id;
+      const activeOrgId = orgProfile?.id || '20000000-0000-0000-0000-000000000001';
       const sType = (newScheme.type && ['Government', 'NGO', 'Corporate CSR'].includes(newScheme.type))
         ? newScheme.type : 'NGO';
 

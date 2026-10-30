@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import BackButton from '../components/common/BackButton';
 import JobApplicationFormBuilder from './JobApplicationFormBuilder';
+import JobAccommodationsHiringScreen from './JobAccommodationsHiringScreen';
+import CareerAutoFillFloatingButton from '../components/CareerAutoFillFloatingButton';
+import { CAREER_PRESETS } from '../data/careerPresets';
 
 const DEPARTMENT_OPTIONS = [
   { value: 'Product & Design', label: 'Product & Design' },
@@ -296,6 +299,46 @@ export default function CreateOpportunityView() {
     );
   };
 
+    const applyCareerPreset = (p) => {
+    setJobData(prev => ({
+      ...prev,
+      title: p.title,
+      dept: p.department,
+      type: p.type,
+      location: p.location,
+      salary: p.salary,
+      experience: p.experience,
+      desc: p.description,
+      requirements: p.requirements,
+      accommodations: p.accommodations,
+      hiringStages: p.hiringStages,
+      perks: p.perks,
+      faqs: p.faqs,
+      presetId: p.id
+    }));
+    setSelectedPerks(p.perks);
+    showToast('Autofilled: ' + p.title, 'success');
+  };
+
+  const clearCareerForm = () => {
+    setJobData({
+      title: '',
+      dept: 'Product & Design',
+      type: 'Full-time',
+      location: '',
+      salary: '',
+      experience: '',
+      desc: '',
+      requirements: [],
+      accommodations: [],
+      hiringStages: [],
+      perks: [],
+      faqs: []
+    });
+    setSelectedPerks([]);
+    showToast('Form cleared', 'info');
+  };
+
   const handlePublish = (customFormConfig) => {
     if (!jobData.title?.trim()) {
       showToast('Please enter a role title', 'warning');
@@ -341,9 +384,27 @@ export default function CreateOpportunityView() {
     navigateTo('careers');
   };
 
-  // Step 2: Form Builder screen (Matching Event Registration Form Builder)
-  if (currentStep === 'formBuilder') {
+    // Step 2: Workplace Accommodations & Hiring Process
+  if (currentStep === 'accommodations') {
     return (
+      <JobAccommodationsHiringScreen
+        jobData={jobData}
+        onBackToDetails={() => changeStep('details')}
+        onProceedToFormBuilder={(stage2Data) => {
+          setJobData(prev => ({ ...prev, ...stage2Data }));
+          changeStep('formBuilder');
+        }}
+        showToast={showToast}
+        onApplyPreset={applyCareerPreset}
+        onClearForm={clearCareerForm}
+      />
+    );
+  }
+
+  // Step 3: Form Builder screen (Matching Event Registration Form Builder)
+  if (currentStep === 'formBuilder') {
+
+  return (
       <JobApplicationFormBuilder
         jobData={jobData}
         initialFormConfig={{
@@ -358,6 +419,8 @@ export default function CreateOpportunityView() {
         onPublishComplete={(newConfig) => handlePublish(newConfig)}
         onBackToDetails={() => changeStep('details')}
         showToast={showToast}
+        onApplyPreset={applyCareerPreset}
+        onClearForm={clearCareerForm}
       />
     );
   }
@@ -648,7 +711,13 @@ export default function CreateOpportunityView() {
         <button
           type="button"
           id="btnNextToAppForm"
-          onClick={() => changeStep('formBuilder')}
+          onClick={() => {
+            if (!jobData.title?.trim()) {
+              showToast('Please enter a role title first', 'warning');
+              return;
+            }
+            changeStep('accommodations');
+          }}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -669,13 +738,20 @@ export default function CreateOpportunityView() {
           onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92'; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
         >
-          <span>Next: Registration Form</span>
+          <span>Next: Workplace Accommodations & Process →</span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M5 12h14" />
             <path d="M12 5l7 7-7 7" />
           </svg>
         </button>
       </div>
+
+      {/* Floating Action Button for Instant Auto-Fill & Preset Selection */}
+      <CareerAutoFillFloatingButton
+        onApplyPreset={applyCareerPreset}
+        onClearForm={clearCareerForm}
+        currentPresetId={jobData.presetId}
+      />
     </div>
   );
 }

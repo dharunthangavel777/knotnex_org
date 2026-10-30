@@ -3,6 +3,9 @@ import { useApp } from '../context/AppContext';
 import SchemeOverviewForm from './SchemeOverviewForm';
 import SchemePortalSupportForm from './SchemePortalSupportForm';
 import SchemeEligibilityProcess from './SchemeEligibilityProcess';
+import SchemeApplicationFormBuilder from './SchemeApplicationFormBuilder';
+import SchemeAutoFillFloatingButton from '../components/SchemeAutoFillFloatingButton';
+import { SCHEME_PRESETS } from '../data/schemePresets';
 
 export default function CreateSchemeView() {
   const { navigateTo, addScheme, updateScheme, showToast, editingScheme, setEditingScheme } = useApp();
@@ -111,7 +114,42 @@ export default function CreateSchemeView() {
   }, [editingScheme]);
 
   // Publish / Save Scheme
-  const handlePublish = () => {
+    const applySchemePreset = (p) => {
+    setTitle(p.title);
+    setCategory(p.category);
+    setValue(p.grantAmount);
+    setDeadline(p.deadline);
+    setRegion(p.region);
+    setOrgName(p.providerName);
+    setDesc(p.description);
+    setPortalUrl(p.officialPortalUrl);
+    setEmailSupport(p.supportEmail);
+    setHelpline(p.supportPhone);
+    setEligibilityCriteria(p.eligibilityCriteria);
+    setRequirements(p.documentsRequired);
+    setApplicationSteps(p.applicationSteps);
+    setFaqs(p.faqs);
+    showToast('Autofilled: ' + p.title, 'success');
+  };
+
+  const clearSchemeForm = () => {
+    setTitle('');
+    setCategory('');
+    setValue('');
+    setDeadline('');
+    setRegion('Pan India');
+    setDesc('');
+    setPortalUrl('');
+    setEmailSupport('');
+    setHelpline('');
+    setEligibilityCriteria([]);
+    setRequirements([]);
+    setApplicationSteps([]);
+    setFaqs([]);
+    showToast('Form cleared', 'info');
+  };
+
+  const handlePublish = (customFormConfig) => {
     if (!title.trim()) {
       showToast('Please enter a scheme title', 'warning');
       changeStep('overview');
@@ -141,7 +179,8 @@ export default function CreateSchemeView() {
       applicationSteps,
       faqs,
       status: editingScheme?.status || 'active',
-      applicantsCount: editingScheme?.applicantsCount || 0
+      applicantsCount: editingScheme?.applicantsCount || 0,
+      formConfig: customFormConfig || {}
     };
 
     if (editingScheme && updateScheme) {
@@ -168,9 +207,37 @@ export default function CreateSchemeView() {
         faqs={faqs}
         setFaqs={setFaqs}
         onBackToOverview={() => changeStep('overview')}
+        onProceedToFormBuilder={() => changeStep('formBuilder')}
         onPublishComplete={handlePublish}
         isEditing={!!editingScheme}
         showToast={showToast}
+        onApplyPreset={applySchemePreset}
+        onClearForm={clearSchemeForm}
+      />
+    );
+  }
+
+  // Page 3: Beneficiary Application Form Builder
+  if (currentStep === 'formBuilder') {
+    return (
+      <SchemeApplicationFormBuilder
+        schemeData={{
+          title,
+          category,
+          grantAmount: value,
+          deadline,
+          region,
+          providerName: orgName,
+          requirements,
+          eligibilityCriteria,
+          isDirectApplication: true
+        }}
+        onPublishComplete={(formConfig) => handlePublish(formConfig)}
+        onBackToEligibility={() => changeStep('eligibilityProcess')}
+        showToast={showToast}
+        isEditing={!!editingScheme}
+        onApplyPreset={applySchemePreset}
+        onClearForm={clearSchemeForm}
       />
     );
   }
@@ -331,6 +398,13 @@ export default function CreateSchemeView() {
           </svg>
         </button>
       </div>
+
+      {/* Floating Action Button for Instant Auto-Fill & Preset Selection */}
+      <SchemeAutoFillFloatingButton
+        onApplyPreset={applySchemePreset}
+        onClearForm={clearSchemeForm}
+        currentPresetId={editingScheme?.id}
+      />
     </div>
   );
 }

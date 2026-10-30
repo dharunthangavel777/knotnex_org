@@ -4,6 +4,7 @@ import SchemeEligibilityCriteriaCard from './SchemeEligibilityCriteriaCard';
 import SchemeRequiredDocsCard from './SchemeRequiredDocsCard';
 import SchemeProcessStepsCard from './SchemeProcessStepsCard';
 import SchemeFaqsCard from './SchemeFaqsCard';
+import SchemeAutoFillFloatingButton from '../components/SchemeAutoFillFloatingButton';
 
 export default function SchemeEligibilityProcess({
   eligibilityCriteria = [],
@@ -15,9 +16,12 @@ export default function SchemeEligibilityProcess({
   faqs = [],
   setFaqs,
   onBackToOverview,
+  onProceedToFormBuilder,
   onPublishComplete,
   isEditing,
-  showToast
+  showToast,
+  onApplyPreset,
+  onClearForm
 }) {
   // Always scroll to top when mounting Page 2
   useEffect(() => {
@@ -137,7 +141,7 @@ export default function SchemeEligibilityProcess({
         <button
           type="button"
           id="btnPublishSchemeFromEligibility"
-          onClick={onPublishComplete}
+          onClick={onProceedToFormBuilder || onPublishComplete}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -158,12 +162,31 @@ export default function SchemeEligibilityProcess({
           onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92'; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
         >
-          <span>{isEditing ? 'Save Changes' : 'Publish Scheme'}</span>
+          <span>Next: Beneficiary Form Builder →</span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </button>
       </div>
+
+      {/* Floating Action Button for Instant Auto-Fill & Preset Selection */}
+      <SchemeAutoFillFloatingButton
+        onApplyPreset={(p) => {
+          if (p.eligibilityCriteria) setEligibilityCriteria(p.eligibilityCriteria);
+          if (p.documentsRequired) setRequirements(p.documentsRequired);
+          if (p.applicationSteps) setApplicationSteps(p.applicationSteps);
+          if (p.faqs) setFaqs(p.faqs);
+          if (onApplyPreset) onApplyPreset(p);
+          if (showToast) showToast('Autofilled stage 2 from ' + p.title, 'success');
+        }}
+        onClearForm={() => {
+          setEligibilityCriteria([]);
+          setRequirements([]);
+          setApplicationSteps([]);
+          setFaqs([]);
+          if (onClearForm) onClearForm();
+        }}
+      />
     </div>
   );
 }
