@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import BackButton from '../../../components/common/BackButton';
-
 export default function EventRegistrationFormBuilder({
   draftEvent,
   onPublishComplete,
@@ -25,7 +24,6 @@ export default function EventRegistrationFormBuilder({
       clearTimeout(t2);
     };
   }, []);
-
   const [emergencyContactEnabled, setEmergencyContactEnabled] = useState(true);
   const [accommodationsEnabled, setAccommodationsEnabled] = useState(true);
   const [accommodations, setAccommodations] = useState([
@@ -62,7 +60,6 @@ export default function EventRegistrationFormBuilder({
   const handleToggleAccommodation = (id) => {
     setAccommodations(prev => prev.map(a => a.id === id ? { ...a, checked: !a.checked } : a));
   };
-
   // Inline Add Accommodation Handler (NO POPUP)
   const handleConfirmAddAccommodation = () => {
     if (!newAccommodationText.trim()) return;
@@ -72,7 +69,6 @@ export default function EventRegistrationFormBuilder({
     setIsAddingAccommodation(false);
     if (addToast) addToast(`Accommodation "${text}" added!`, 'success');
   };
-
   const handleAddQuestion = () => {
     if (!newQuestionTitle.trim()) return;
     const newQ = {
@@ -89,12 +85,10 @@ export default function EventRegistrationFormBuilder({
     setIsAddingQuestion(false);
     if (addToast) addToast('Question added to registration form!', 'success');
   };
-
   const handleRemoveQuestion = (id) => {
     setCustomQuestions(prev => prev.filter(q => q.id !== id));
     if (addToast) addToast('Question removed.', 'info');
   };
-
   const handleSaveDraft = () => {
     const fullEvent = {
       ...draftEvent,
@@ -116,7 +110,6 @@ export default function EventRegistrationFormBuilder({
       addToast('Event draft saved to local workspace!', 'success');
     }
   };
-
   const handlePublish = () => {
     const fullEvent = {
       ...draftEvent,
@@ -134,7 +127,6 @@ export default function EventRegistrationFormBuilder({
     };
     onPublishComplete(fullEvent);
   };
-
   return (
     <div
       style={{

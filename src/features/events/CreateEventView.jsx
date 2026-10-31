@@ -306,11 +306,7 @@ export default function CreateEventView({
   };
 
   const handleSaveDraft = () => {
-    if (editingEvent) {
-      handleDirectUpdate();
-    } else {
-      if (addToast) addToast('Draft saved!', 'success');
-    }
+    handleDirectUpdate();
   };
 
   const handleProceedToEligibility = () => {
@@ -444,7 +440,36 @@ export default function CreateEventView({
         onNavigate('eventDetails');
       }
     } else {
-      if (addToast) addToast('Draft saved!', 'success');
+      const targetId = 'ev-' + Date.now();
+      const updated = {
+        id: targetId,
+        name: name.trim() || 'Untitled Event',
+        poster: coverImage || null,
+        originalPoster: originalCoverImage || coverImage,
+        date: eventDate + (eventTime ? ' • ' + eventTime : ''),
+        time: eventTime,
+        location: location.trim(),
+        category: category.trim() || 'General',
+        capacity: capacity ? Number(capacity) : 500,
+        ticketPrice: ticketPrice.trim() || '0',
+        registered: 0,
+        status: 'draft',
+        description: description.trim(),
+        sessions: sessions || [],
+        ...(eligibilityData || {})
+      };
+      if (appContext.addEvent) {
+        appContext.addEvent(updated);
+      } else if (setEvents) {
+        setEvents(prev => [updated, ...prev]);
+      }
+      if (appContext.setSelectedEventId) {
+        appContext.setSelectedEventId(updated.id);
+      }
+      if (addToast) addToast(`Event "${updated.name}" draft saved!`, 'success');
+      if (onNavigate) {
+        onNavigate('events');
+      }
     }
   };
 
@@ -561,7 +586,18 @@ export default function CreateEventView({
               onNavigate('eventDetails');
             }
           } else {
-            if (addToast) addToast('Draft saved!', 'success');
+            if (appContext.addEvent) {
+              appContext.addEvent(fullEvent);
+            } else if (setEvents) {
+              setEvents(prev => [fullEvent, ...prev]);
+            }
+            if (appContext.setSelectedEventId) {
+              appContext.setSelectedEventId(fullEvent.id);
+            }
+            if (addToast) addToast(`Event "${fullEvent.name}" draft saved!`, 'success');
+            if (onNavigate) {
+              onNavigate('events');
+            }
           }
         }}
         onBackToDetails={() => changeStep('eligibility')}
@@ -1175,6 +1211,33 @@ export default function CreateEventView({
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Save Changes
+            </button>
+          )}
+          {!editingEvent && (
+            <button
+              type="button"
+              onClick={handleDirectUpdate}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                height: 40,
+                padding: '0 18px',
+                borderRadius: 10,
+                border: '1.5px solid #6336EB',
+                background: '#FFF',
+                color: '#6336EB',
+                fontSize: 13.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99, 54, 235, 0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#FFF'; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Publish Now
             </button>
           )}
           <button type="button" onClick={handleProceedToEligibility}
