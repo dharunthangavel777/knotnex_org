@@ -49,6 +49,39 @@ export default function ModalManager() {
   const [previewTab, setPreviewTab] = useState('page');
   // 8. Gate scan success state
   const [scanResult, setScanResult] = useState(null);
+  const [manualPassInput, setManualPassInput] = useState('');
+  const [cameraActive, setCameraActive] = useState(false);
+  const qrVideoRef = React.useRef(null);
+
+  useEffect(() => {
+    let stream = null;
+    if (activeModal === 'modalQrGateScanner') {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+          .then((s) => {
+            stream = s;
+            setCameraActive(true);
+            if (qrVideoRef.current) {
+              qrVideoRef.current.srcObject = s;
+            }
+          })
+          .catch((err) => {
+            console.warn('[QR Scanner] Camera stream unavailable:', err);
+            setCameraActive(false);
+          });
+      }
+    } else {
+      setCameraActive(false);
+      setScanResult(null);
+      setManualPassInput('');
+    }
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [activeModal]);
 
   if (!activeModal) return null;
 
@@ -1349,15 +1382,33 @@ export default function ModalManager() {
             <div className="modal-body" style={{ padding: '24px 20px' }}>
               <div style={{ position: 'relative', width: '220px', height: '220px', margin: '0 auto 20px', background: '#0F172A', borderRadius: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {/* Viewfinder borders */}
-                <div style={{ position: 'absolute', top: '12px', left: '12px', width: '24px', height: '24px', borderTop: '3px solid #6336EB', borderLeft: '3px solid #6336EB' }} />
-                <div style={{ position: 'absolute', top: '12px', right: '12px', width: '24px', height: '24px', borderTop: '3px solid #6336EB', borderRight: '3px solid #6336EB' }} />
-                <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '24px', height: '24px', borderBottom: '3px solid #6336EB', borderLeft: '3px solid #6336EB' }} />
-                <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '24px', height: '24px', borderBottom: '3px solid #6336EB', borderRight: '3px solid #6336EB' }} />
+                <div style={{ position: 'absolute', top: '12px', left: '12px', width: '24px', height: '24px', borderTop: '3px solid #6336EB', borderLeft: '3px solid #6336EB', zIndex: 2 }} />
+                <div style={{ position: 'absolute', top: '12px', right: '12px', width: '24px', height: '24px', borderTop: '3px solid #6336EB', borderRight: '3px solid #6336EB', zIndex: 2 }} />
+                <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '24px', height: '24px', borderBottom: '3px solid #6336EB', borderLeft: '3px solid #6336EB', zIndex: 2 }} />
+                <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '24px', height: '24px', borderBottom: '3px solid #6336EB', borderRight: '3px solid #6336EB', zIndex: 2 }} />
+
+                {/* Video feed element */}
+                <video
+                  ref={qrVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: cameraActive ? 'block' : 'none'
+                  }}
+                />
+
+                {!cameraActive && (
+                  <span className="material-symbols-outlined" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.2)' }}>
+                    videocam
+                  </span>
+                )}
 
                 {/* Laser scan line animation */}
-                <div style={{ position: 'absolute', width: '100%', height: '2px', background: '#12B76A', boxShadow: '0 0 10px #12B76A', animation: 'scanLaser 2s infinite ease-in-out' }} />
-
-                <span className="material-symbols-outlined" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.2)' }}>videocam</span>
+                <div style={{ position: 'absolute', width: '100%', height: '2px', background: '#12B76A', boxShadow: '0 0 10px #12B76A', animation: 'scanLaser 2s infinite ease-in-out', zIndex: 3 }} />
               </div>
 
               {scanResult ? (
@@ -1366,20 +1417,44 @@ export default function ModalManager() {
                 </div>
               ) : (
                 <p style={{ fontSize: '13px', color: 'var(--neutral-500)', marginBottom: '16px' }}>
-                  Align attendee mobile QR code inside the frame. Camera auto-focus enabled.
+                  {cameraActive ? 'WebRTC Camera active. Align delegate QR code inside the frame.' : 'WebRTC Camera or manual code input. Align pass or enter code below.'}
                 </p>
               )}
 
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ flex: 1, fontSize: '13px' }}
+                  placeholder="Paste QR Code Hash or Pass ID..."
+                  value={manualPassInput}
+                  onChange={(e) => setManualPassInput(e.target.value)}
+                />
+                <button
+                  className="btn-primary"
+                  style={{ padding: '0 14px', fontSize: '13px' }}
+                  disabled={!manualPassInput.trim()}
+                  onClick={() => {
+                    const code = manualPassInput.trim();
+                    checkInAttendee(code);
+                    setScanResult(code);
+                    setManualPassInput('');
+                  }}
+                >
+                  Verify
+                </button>
+              </div>
+
               <button
-                className="btn-primary"
-                style={{ width: '100%', justifyContent: 'center' }}
+                className="btn-secondary"
+                style={{ width: '100%', justifyContent: 'center', fontSize: '13px' }}
                 onClick={() => {
                   const targetCode = registrations?.[0]?.ticketCode || registrations?.[0]?.qr_code_hash || registrations?.[0]?.id || 'PASS-SCAN-VERIFIED';
                   checkInAttendee(targetCode);
                   setScanResult(targetCode);
                 }}
               >
-                Simulate Camera Scan ({registrations?.[0]?.ticketCode || registrations?.[0]?.qr_code_hash?.slice(0, 8)?.toUpperCase() || 'Turnstile QR'})
+                Scan Next Attendee ({registrations?.[0]?.ticketCode || registrations?.[0]?.qr_code_hash?.slice(0, 8)?.toUpperCase() || 'Turnstile QR'})
               </button>
             </div>
           </div>

@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Play, Video } from 'lucide-react';
-import { HERO_SLIDES } from '../data/mockData';
+
+interface SlideItem {
+  badge: string;
+  title: string;
+  description: string;
+  primaryAction: { text: string };
+  secondaryAction: { text: string };
+}
+
+const DEFAULT_HERO_SLIDES: SlideItem[] = [
+  {
+    badge: 'KnotNex Institutional Platform',
+    title: 'Publish Accessible Events, Opportunities & Welfare Grants',
+    description: 'Empower inclusive communities with unified ticketing, delegate management, and real-time attendance verification.',
+    primaryAction: { text: 'Explore Pipeline' },
+    secondaryAction: { text: 'View Guidelines' },
+  },
+  {
+    badge: 'Equal Opportunity Hiring',
+    title: 'Connect Verified Candidates with Inclusive Careers',
+    description: 'Seamlessly review applicant dossiers, workplace accommodation requests, and hiring stages with candidate privacy.',
+    primaryAction: { text: 'Post Career' },
+    secondaryAction: { text: 'Candidate Pipeline' },
+  },
+];
 
 interface HeroBannerProps {
   onGenerateHighlights: () => void;
@@ -12,11 +36,11 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   onOpenLiveKeynotes,
 }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const slide = HERO_SLIDES[currentSlideIndex];
+  const slide = DEFAULT_HERO_SLIDES[currentSlideIndex] || DEFAULT_HERO_SLIDES[0];
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+      setCurrentSlideIndex((prev) => (prev + 1) % DEFAULT_HERO_SLIDES.length);
     }, 8000);
     return () => clearInterval(timer);
   }, []);
@@ -99,7 +123,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
       {/* Bottom Carousel Indicator Dots */}
       <div className="hero-carousel-dots">
-        {HERO_SLIDES.map((_, idx: number) => (
+        {DEFAULT_HERO_SLIDES.map((_, idx: number) => (
           <button
             key={idx}
             className={`carousel-dot ${idx === currentSlideIndex ? 'active' : ''}`}
@@ -111,3 +135,5 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
     </div>
   );
 };
+
+export default HeroBanner;

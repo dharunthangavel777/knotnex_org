@@ -149,6 +149,51 @@ export const apiClient = {
     });
   },
 
+  async uploadFile(file, folder = 'gallery') {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folder) formData.append('folder', folder);
+
+    const token = this.getToken();
+    const headers = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    } else if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      headers.Authorization = 'Bearer mock_organization';
+    }
+
+    const endpoint = '/uploads/image';
+    const buildUrl = (base) => endpoint.startsWith('http') ? endpoint : `${base}${endpoint}`;
+
+    try {
+      const response = await fetch(buildUrl(currentBaseUrl), {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || `Upload failed (${response.status})`);
+      }
+      return data?.data?.url || data?.url;
+    } catch (err) {
+      if (currentBaseUrl !== FALLBACK_API_URL) {
+        try {
+          const fallbackResp = await fetch(buildUrl(FALLBACK_API_URL), {
+            method: 'POST',
+            headers,
+            body: formData,
+          });
+          const data = await fallbackResp.json();
+          if (fallbackResp.ok) {
+            return data?.data?.url || data?.url;
+          }
+        } catch (_) {}
+      }
+      throw err;
+    }
+  },
+
   delete(endpoint) {
     return this.request(endpoint, { method: 'DELETE' });
   },

@@ -8,7 +8,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import type { EventItem, EventStatus } from '../types';
-import { METRICS_DATA } from '../data/mockData';
+
 
 interface EventManagementProps {
   events: EventItem[];
@@ -41,6 +41,23 @@ export const EventManagement: React.FC<EventManagementProps> = ({
   const publishedCount = events.filter((e) => e.status === 'Published').length;
   const completedCount = events.filter((e) => e.status === 'Completed').length;
   const cancelledCount = events.filter((e) => e.status === 'Cancelled').length;
+
+  // Dynamic metrics computed from real database events
+  const upcomingsList = events.filter((e) => {
+    const s = (e.status || '').toLowerCase();
+    return s === 'upcoming' || s === 'published' || s === 'live/published';
+  });
+  const upcomingsCount = upcomingsList.length;
+  const totalCapacity = events.reduce((sum, e) => sum + (Number((e as any).capacity) || 0), 0);
+  const totalRegistered = events.reduce((sum, e) => sum + (Number((e as any).registered || (e as any).registered_count || (e as any).registration_count || 0)), 0);
+  const upcomingsFillPercentage = totalCapacity > 0 ? Math.min(100, Math.round((totalRegistered / totalCapacity) * 100)) : 0;
+  const totalRevenueNumber = events.reduce((sum, e) => {
+    const price = Number((e as any).ticketPrice || (e as any).ticket_price || 0);
+    const reg = Number((e as any).registered || (e as any).registered_count || (e as any).registration_count || 0);
+    return sum + (price * reg);
+  }, 0);
+  const grossRevenueFormatted = totalRevenueNumber > 0 ? `₹${totalRevenueNumber.toLocaleString()}` : '₹0';
+  const grossCollectionFormatted = totalRegistered > 0 ? `${totalRegistered} Passes` : '0 Passes';
 
   // Filtered events
   const filteredEvents = useMemo(() => {
@@ -121,10 +138,10 @@ export const EventManagement: React.FC<EventManagementProps> = ({
           <div className="metric-card-top">
             <span className="metric-label">Total Events</span>
           </div>
-          <div className="metric-main-value">{METRICS_DATA.totalEvents}</div>
+          <div className="metric-main-value">{totalCount}</div>
           <div className="metric-card-bottom">
             <span className="metric-sub-positive">
-              <span className="arrow-up">▲</span> {METRICS_DATA.totalEventsGrowth}
+              <span className="arrow-up">▲</span> Active live portfolio
             </span>
             <button
               className="metric-view-btn"
@@ -140,9 +157,9 @@ export const EventManagement: React.FC<EventManagementProps> = ({
         <div className="metric-stat-card">
           <div className="metric-card-top flex-between">
             <span className="metric-label">Upcomings</span>
-            <span className="metric-badge-pill">{METRICS_DATA.upcomingsFillPercentage}% Filled</span>
+            <span className="metric-badge-pill">{upcomingsFillPercentage}% Filled</span>
           </div>
-          <div className="metric-main-value">{METRICS_DATA.upcomingsCount}</div>
+          <div className="metric-main-value">{upcomingsCount}</div>
           <div className="metric-card-bottom">
             <div className="metric-progress-track">
               <div
@@ -165,10 +182,10 @@ export const EventManagement: React.FC<EventManagementProps> = ({
           <div className="metric-card-top">
             <span className="metric-label">Gross Collection</span>
           </div>
-          <div className="metric-main-value">{METRICS_DATA.grossCollection}</div>
+          <div className="metric-main-value">{grossCollectionFormatted}</div>
           <div className="metric-card-bottom">
             <span className="metric-sub-positive">
-              <span className="arrow-up">▲</span> {METRICS_DATA.grossCollectionRate}
+              <span className="arrow-up">▲</span> Registered delegates
             </span>
           </div>
         </div>
@@ -178,9 +195,9 @@ export const EventManagement: React.FC<EventManagementProps> = ({
           <div className="metric-card-top">
             <span className="metric-label">Gross Revenue</span>
           </div>
-          <div className="metric-main-value">{METRICS_DATA.grossRevenue}</div>
+          <div className="metric-main-value">{grossRevenueFormatted}</div>
           <div className="metric-card-bottom">
-            <span className="metric-sub-muted">{METRICS_DATA.platformTake}</span>
+            <span className="metric-sub-muted">Verified institutional revenue</span>
           </div>
         </div>
       </div>

@@ -1342,7 +1342,6 @@ export function AppProvider({ children }) {
     startEditJob,
     editingScheme,
     setEditingScheme,
-    updateScheme,
     selectedSchemeId,
     setSelectedSchemeId,
     selectedScheme,

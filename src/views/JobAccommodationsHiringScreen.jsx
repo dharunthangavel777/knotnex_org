@@ -106,6 +106,32 @@ export default function JobAccommodationsHiringScreen({
     setIsAddingStage(false);
   };
 
+  const moveStageUp = (index) => {
+    if (index <= 0) return;
+    setHiringStages(prev => {
+      const copy = [...prev];
+      const temp = copy[index - 1];
+      copy[index - 1] = copy[index];
+      copy[index] = temp;
+      return copy.map((s, idx) => ({ ...s, step: idx + 1 }));
+    });
+  };
+
+  const moveStageDown = (index) => {
+    setHiringStages(prev => {
+      if (index >= prev.length - 1) return prev;
+      const copy = [...prev];
+      const temp = copy[index + 1];
+      copy[index + 1] = copy[index];
+      copy[index] = temp;
+      return copy.map((s, idx) => ({ ...s, step: idx + 1 }));
+    });
+  };
+
+  const handleRemoveStage = (index) => {
+    setHiringStages(prev => prev.filter((_, idx) => idx !== index).map((s, idx) => ({ ...s, step: idx + 1 })));
+  };
+
   const handleAddPerk = () => {
     if (!newPerk.trim()) return;
     setPerks(prev => [...prev, newPerk.trim()]);
@@ -371,9 +397,81 @@ export default function JobAccommodationsHiringScreen({
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>{stg.title}</span>
-                      <span style={{ fontSize: '11.5px', color: '#6D28D9', fontWeight: 600, backgroundColor: '#EDE9FE', padding: '2px 8px', borderRadius: '6px' }}>
-                        {stg.duration}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '11.5px', color: '#6D28D9', fontWeight: 600, backgroundColor: '#EDE9FE', padding: '2px 8px', borderRadius: '6px' }}>
+                          {stg.duration}
+                        </span>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => moveStageUp(i)}
+                            disabled={i === 0}
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '6px',
+                              border: '1px solid #CBD5E1',
+                              background: i === 0 ? '#F1F5F9' : '#FFFFFF',
+                              color: i === 0 ? '#94A3B8' : '#334155',
+                              cursor: i === 0 ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                              padding: 0
+                            }}
+                            title="Move Stage Earlier"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveStageDown(i)}
+                            disabled={i === hiringStages.length - 1}
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '6px',
+                              border: '1px solid #CBD5E1',
+                              background: i === hiringStages.length - 1 ? '#F1F5F9' : '#FFFFFF',
+                              color: i === hiringStages.length - 1 ? '#94A3B8' : '#334155',
+                              cursor: i === hiringStages.length - 1 ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                              padding: 0
+                            }}
+                            title="Move Stage Later"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveStage(i)}
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '6px',
+                              border: '1px solid #FECACA',
+                              background: '#FEF2F2',
+                              color: '#DC2626',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '14px',
+                              lineHeight: 1,
+                              padding: 0
+                            }}
+                            title="Delete Stage"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <p style={{ fontSize: '12.5px', color: '#475569', margin: '4px 0 0 0' }}>{stg.desc}</p>
                   </div>
