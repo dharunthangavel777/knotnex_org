@@ -7,7 +7,7 @@ import { downloadCSV } from '../utils/csvExport';
 import { downloadCandidateResume } from '../utils/resumeDownload';
 
 export default function CareersView() {
-  const { jobs, applications, activeSubAction, navigateTo, showToast, selectJob, updateJob, loadBackendData } = useApp();
+  const { jobs, applications, activeSubAction, navigateTo, showToast, selectJob, startEditJob, updateJob, loadBackendData } = useApp();
 
   const handleToggleJobActive = (job) => {
     const nextStatus = job.status === 'active' ? 'closed' : 'active';
@@ -339,7 +339,7 @@ export default function CareersView() {
                 <col style={{ width: '16%' }} />
                 <col style={{ width: '18%' }} />
                 <col style={{ width: '14%' }} />
-                <col style={{ width: '85px' }} />
+                <col style={{ width: '135px' }} />
                 <col style={{ width: '90px' }} />
               </colgroup>
               <thead>
@@ -349,7 +349,7 @@ export default function CareersView() {
                   <th>Department</th>
                   <th>Location &amp; Type</th>
                   <th>Applicants</th>
-                  <th className="col-center" style={{ width: '85px', minWidth: '85px', textAlign: 'center' }}>Action</th>
+                  <th className="col-center" style={{ width: '135px', minWidth: '135px', textAlign: 'center' }}>Actions</th>
                   <th className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }}>Active</th>
                 </tr>
               </thead>
@@ -389,7 +389,17 @@ export default function CareersView() {
                               )}
                               {j.status === 'rejected' && (
                                 <span style={{ background: '#FEE4E2', color: '#D92D20', border: '1px solid #FECDCA', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
-                                  ● Rejected
+                                  ● Rejected{j.rejection_reason ? `: ${j.rejection_reason.substring(0, 20)}...` : ''}
+                                </span>
+                              )}
+                              {(j.hasPendingRevision || j.has_pending_revision) && (
+                                <span style={{ background: '#FEF0C7', color: '#B54708', border: '1px solid #FEDF89', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }} title="Updates submitted for Admin review">
+                                  ● Revision Under Review
+                                </span>
+                              )}
+                              {(j.is_verified || j.isVerified) && !j.has_pending_revision && !j.hasPendingRevision && (
+                                <span style={{ background: '#ECFDF3', color: '#027A48', border: '1px solid #A6F4C5', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Live
                                 </span>
                               )}
                             </div>
@@ -410,7 +420,7 @@ export default function CareersView() {
                       <td style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {j.applicantsCount || 0} candidates
                       </td>
-                      <td className="col-center" style={{ width: '85px' }} onClick={(e) => e.stopPropagation()}>
+                      <td className="col-center" style={{ width: '135px', minWidth: '135px' }} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <button
                             className="btn-secondary"
@@ -418,6 +428,18 @@ export default function CareersView() {
                             onClick={() => selectJob(j.id)}
                           >
                             View
+                          </button>
+                          <button
+                            className="btn-secondary"
+                            style={{ height: '30px', padding: '0 10px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', borderColor: '#D0D5DD' }}
+                            onClick={() => startEditJob && startEditJob(j)}
+                            title="Edit this opportunity"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M12 20h9" />
+                              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                            </svg>
+                            <span>Edit</span>
                           </button>
                         </div>
                       </td>

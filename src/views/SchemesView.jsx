@@ -15,6 +15,7 @@ export default function SchemesView() {
     updateScheme,
     updateSchemeApplication,
     selectScheme,
+    startEditScheme,
     selectSchemeApplication,
     loadBackendData
   } = useApp();
@@ -349,10 +350,11 @@ export default function SchemesView() {
             <table className="recent-products-table">
               <colgroup>
                 <col style={{ width: '48px' }} />
-                <col style={{ width: '35%' }} />
+                <col style={{ width: '30%' }} />
                 <col style={{ width: '18%' }} />
                 <col style={{ width: '18%' }} />
                 <col style={{ width: '16%' }} />
+                <col style={{ width: '135px' }} />
                 <col style={{ width: '90px' }} />
               </colgroup>
               <thead>
@@ -362,13 +364,14 @@ export default function SchemesView() {
                   <th>Category</th>
                   <th>Grant Pool</th>
                   <th>Deadline</th>
+                  <th className="col-center" style={{ width: '135px', minWidth: '135px', textAlign: 'center' }}>Actions</th>
                   <th className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }}>Active</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredSchemes.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--neutral-500)' }}>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--neutral-500)' }}>
                       No grant schemes found. Click "+ Post Scheme" above to create and manage developmental subsidy programs.
                     </td>
                   </tr>
@@ -412,7 +415,17 @@ export default function SchemesView() {
                               )}
                               {s.status === 'rejected' && (
                                 <span style={{ background: '#FEE4E2', color: '#D92D20', border: '1px solid #FECDCA', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
-                                  ● Rejected
+                                  ● Rejected{s.rejection_reason ? `: ${s.rejection_reason.substring(0, 20)}...` : ''}
+                                </span>
+                              )}
+                              {(s.hasPendingRevision || s.has_pending_revision) && (
+                                <span style={{ background: '#FEF0C7', color: '#B54708', border: '1px solid #FEDF89', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }} title="Updates submitted for Admin review">
+                                  ● Revision Under Review
+                                </span>
+                              )}
+                              {(s.is_verified || s.isVerified) && !s.has_pending_revision && !s.hasPendingRevision && (
+                                <span style={{ background: '#ECFDF3', color: '#027A48', border: '1px solid #A6F4C5', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Live
                                 </span>
                               )}
                             </div>
@@ -432,6 +445,29 @@ export default function SchemesView() {
                       </td>
                       <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                         {s.deadline || 'Open'}
+                      </td>
+                      <td className="col-center" style={{ width: '135px', minWidth: '135px' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                          <button
+                            className="btn-secondary"
+                            style={{ height: '30px', padding: '0 10px', fontSize: '12px' }}
+                            onClick={() => selectScheme && selectScheme(s.id)}
+                          >
+                            View
+                          </button>
+                          <button
+                            className="btn-secondary"
+                            style={{ height: '30px', padding: '0 10px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', borderColor: '#D0D5DD' }}
+                            onClick={() => startEditScheme && startEditScheme(s)}
+                            title="Edit this scheme"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M12 20h9" />
+                              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                            </svg>
+                            <span>Edit</span>
+                          </button>
+                        </div>
                       </td>
                       <td className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                         <label

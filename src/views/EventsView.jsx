@@ -11,6 +11,7 @@ export default function EventsView() {
     selectEvent,
     showToast,
     updateEvent,
+    startEditEvent,
     loadBackendData
   } = useApp();
 
@@ -290,7 +291,7 @@ export default function EventsView() {
                 <col style={{ width: '14%' }} />
                 <col style={{ width: '18%' }} />
                 <col style={{ width: '16%' }} />
-                <col style={{ width: '85px' }} />
+                <col style={{ width: '135px' }} />
                 <col style={{ width: '90px' }} />
               </colgroup>
               <thead>
@@ -300,7 +301,7 @@ export default function EventsView() {
                   <th>Category</th>
                   <th>Registrations</th>
                   <th>Date / Schedule</th>
-                  <th className="col-center" style={{ width: '85px', minWidth: '85px', textAlign: 'center' }}>Action</th>
+                  <th className="col-center" style={{ width: '135px', minWidth: '135px', textAlign: 'center' }}>Actions</th>
                   <th className="col-center" style={{ width: '90px', minWidth: '90px', textAlign: 'center' }}>Active</th>
                 </tr>
               </thead>
@@ -339,7 +340,17 @@ export default function EventsView() {
                               )}
                               {ev.status === 'rejected' && (
                                 <span style={{ background: '#FEE4E2', color: '#D92D20', border: '1px solid #FECDCA', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
-                                  ● Rejected
+                                  ● Rejected{ev.rejection_reason ? `: ${ev.rejection_reason.substring(0, 20)}...` : ''}
+                                </span>
+                              )}
+                              {(ev.hasPendingRevision || ev.has_pending_revision) && (
+                                <span style={{ background: '#FEF0C7', color: '#B54708', border: '1px solid #FEDF89', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }} title="Updates submitted for Admin review">
+                                  ● Revision Under Review
+                                </span>
+                              )}
+                              {(ev.is_verified || ev.isVerified) && !ev.has_pending_revision && !ev.hasPendingRevision && (
+                                <span style={{ background: '#ECFDF3', color: '#027A48', border: '1px solid #A6F4C5', fontSize: '10.5px', fontWeight: 700, padding: '1px 7px', borderRadius: '12px' }}>
+                                  ● Live
                                 </span>
                               )}
                             </div>
@@ -368,7 +379,7 @@ export default function EventsView() {
                       <td style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
                         {ev.date}
                       </td>
-                      <td className="col-center" style={{ width: '85px' }} onClick={(e) => e.stopPropagation()}>
+                      <td className="col-center" style={{ width: '135px', minWidth: '135px' }} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <button
                             className="btn-secondary"
@@ -376,6 +387,18 @@ export default function EventsView() {
                             onClick={() => selectEvent(ev.id)}
                           >
                             View
+                          </button>
+                          <button
+                            className="btn-secondary"
+                            style={{ height: '32px', padding: '0 10px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', borderColor: '#D0D5DD' }}
+                            onClick={() => startEditEvent && startEditEvent(ev)}
+                            title="Edit this event"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M12 20h9" />
+                              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                            </svg>
+                            <span>Edit</span>
                           </button>
                         </div>
                       </td>

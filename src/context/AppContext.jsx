@@ -34,6 +34,9 @@ export const normalizeEvent = (e) => ({
   registrationSettings: e.registration_settings || e.registrationSettings || {},
   accessibilityFeatures: e.accessibility_features || e.accessibility || {},
   contact: e.contact || e.contact_and_emergency || {},
+  hasPendingRevision: Boolean(e.has_pending_revision || e.hasPendingRevision),
+  isVerified: Boolean(e.is_verified || e.isVerified),
+  rejectionReason: e.rejection_reason || e.rejectionReason || null,
 });
 
 export const normalizeJob = (j) => ({
@@ -58,6 +61,9 @@ export const normalizeJob = (j) => ({
   responsibilities: j.responsibilities || [],
   recruiter: j.recruiter_info || j.recruiter || {},
   formConfig: j.application_form_config || j.formConfig || {},
+  hasPendingRevision: Boolean(j.has_pending_revision || j.hasPendingRevision),
+  isVerified: Boolean(j.is_verified || j.isVerified),
+  rejectionReason: j.rejection_reason || j.rejectionReason || null,
 });
 
 export const normalizeScheme = (s) => ({
@@ -78,6 +84,9 @@ export const normalizeScheme = (s) => ({
   portalUrl: s.official_portal_url || s.portalUrl || '',
   officialPortalUrl: s.official_portal_url || s.portalUrl || '',
   emailSupport: s.support_email || s.emailSupport || '',
+  hasPendingRevision: Boolean(s.has_pending_revision || s.hasPendingRevision),
+  isVerified: Boolean(s.is_verified || s.isVerified),
+  rejectionReason: s.rejection_reason || s.rejectionReason || null,
   supportEmail: s.support_email || s.emailSupport || '',
   helpline: s.support_phone || s.helpline || '',
   supportPhone: s.support_phone || s.helpline || '',
@@ -878,17 +887,25 @@ export function AppProvider({ children }) {
   };
 
   const updateEvent = async (id, updates) => {
+    let apiRes = null;
     try {
-      await eventsApi.updateEvent(id, updates);
+      apiRes = await eventsApi.updateEvent(id, updates);
     } catch (err) {
       console.warn('[AppContext] updateEvent error:', err);
     }
-    setEvents(prev => prev.map(e => (String(e.id) === String(id) ? normalizeEvent({ ...e, ...updates }) : e)));
+    const current = events.find(e => String(e.id) === String(id));
+    const isLive = current?.isVerified || current?.is_verified;
+    if (isLive || apiRes?.has_pending_revision) {
+      setEvents(prev => prev.map(e => (String(e.id) === String(id) ? normalizeEvent({ ...e, has_pending_revision: true, hasPendingRevision: true }) : e)));
+      showToast('Event updates submitted for Admin verification. Live version remains published.', 'info');
+    } else {
+      setEvents(prev => prev.map(e => (String(e.id) === String(id) ? normalizeEvent({ ...e, ...updates, status: 'pending_verification' }) : e)));
+      showToast('Event details updated and submitted for Admin verification.', 'success');
+    }
     if (id) {
       setSelectedEventId(id);
     }
     setEditingEvent(null);
-    showToast('Event details updated successfully.', 'success');
   };
 
   const deleteEvent = async (id) => {
@@ -971,13 +988,25 @@ export function AppProvider({ children }) {
   };
 
   const updateJob = async (jobId, updatedData) => {
+    let apiRes = null;
     try {
-      await jobsApi.updateJob(jobId, updatedData);
+      apiRes = await jobsApi.updateJob(jobId, updatedData);
     } catch (err) {
       console.warn('[AppContext] updateJob error:', err);
     }
-    setJobs(prev => prev.map(j => (String(j.id) === String(jobId) ? normalizeJob({ ...j, ...updatedData }) : j)));
-    showToast('Opportunity updated successfully!', 'success');
+    const current = jobs.find(j => String(j.id) === String(jobId));
+    const isLive = current?.isVerified || current?.is_verified;
+    if (isLive || apiRes?.has_pending_revision) {
+      setJobs(prev => prev.map(j => (String(j.id) === String(jobId) ? normalizeJob({ ...j, has_pending_revision: true, hasPendingRevision: true }) : j)));
+      showToast('Opportunity updates submitted for Admin verification. Live version remains published.', 'info');
+    } else {
+      setJobs(prev => prev.map(j => (String(j.id) === String(jobId) ? normalizeJob({ ...j, ...updatedData, status: 'pending_verification' }) : j)));
+      showToast('Opportunity updated and submitted for Admin verification.', 'success');
+    }
+    if (jobId) {
+      setSelectedJobId(jobId);
+    }
+    setEditingJob(null);
   };
 
   const deleteJob = async (jobId) => {
@@ -994,6 +1023,15 @@ export function AppProvider({ children }) {
   const selectScheme = (id) => {
     setSelectedSchemeId(id);
     navigateTo('schemeDetails');
+  };
+
+  const startEditScheme = (schemeToEdit) => {
+    const target = schemeToEdit || selectedScheme;
+    setEditingScheme(target);
+    if (target && target.id) {
+      setSelectedSchemeId(target.id);
+    }
+    navigateTo('createScheme');
   };
 
   const addScheme = async (newScheme) => {
@@ -1048,13 +1086,22 @@ export function AppProvider({ children }) {
   };
 
   const updateScheme = async (schemeId, updatedData) => {
+    let apiRes = null;
     try {
-      await schemesApi.updateScheme(schemeId, updatedData);
+      apiRes = await schemesApi.updateScheme(schemeId, updatedData);
     } catch (err) {
       console.warn('[AppContext] updateScheme error:', err);
     }
-    setSchemes(prev => prev.map(s => (String(s.id) === String(schemeId) ? normalizeScheme({ ...s, ...updatedData }) : s)));
-    showToast('Scheme updated successfully!', 'success');
+    const current = schemes.find(s => String(s.id) === String(schemeId));
+    const isLive = current?.isVerified || current?.is_verified;
+    if (isLive || apiRes?.has_pending_revision) {
+      setSchemes(prev => prev.map(s => (String(s.id) === String(schemeId) ? normalizeScheme({ ...s, has_pending_revision: true, hasPendingRevision: true }) : s)));
+      showToast('Scheme updates submitted for Admin verification. Live version remains active.', 'info');
+    } else {
+      setSchemes(prev => prev.map(s => (String(s.id) === String(schemeId) ? normalizeScheme({ ...s, ...updatedData, status: 'pending_verification' }) : s)));
+      showToast('Scheme updated and submitted for Admin verification.', 'success');
+    }
+    setEditingScheme(null);
   };
 
   const deleteScheme = async (schemeId) => {
@@ -1342,6 +1389,7 @@ export function AppProvider({ children }) {
     startEditJob,
     editingScheme,
     setEditingScheme,
+    startEditScheme,
     selectedSchemeId,
     setSelectedSchemeId,
     selectedScheme,
