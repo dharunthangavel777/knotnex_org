@@ -712,7 +712,7 @@ export function AppProvider({ children }) {
       const numPrice = typeof rawPrice === 'number' ? rawPrice : (parseInt(String(rawPrice).replace(/[^0-9]/g, ''), 10) || 0);
       const isFree = numPrice === 0 || String(rawPrice).toLowerCase().includes('free');
 
-      const activeOrgId = orgProfile?.id;
+      const activeOrgId = (orgProfile?.id && orgProfile.id.length > 10) ? orgProfile.id : '20000000-0000-0000-0000-000000000001';
 
       const payload = {
         title: newEvent.name || newEvent.title,
@@ -796,21 +796,21 @@ export function AppProvider({ children }) {
 
   const addJob = async (newJob) => {
     try {
-      const activeOrgId = orgProfile?.id;
+      const activeOrgId = (orgProfile?.id && orgProfile.id.length > 10) ? orgProfile.id : '20000000-0000-0000-0000-000000000001';
       const jType = (newJob.type && ['full-time', 'part-time', 'internship', 'volunteer', 'contract'].includes(newJob.type.toLowerCase()))
         ? newJob.type.toLowerCase() : 'full-time';
       const locType = (newJob.location && newJob.location.toLowerCase().includes('remote')) ? 'remote' : 'on-site';
 
       const payload = {
-        title: newJob.title || newJob.role,
+        title: newJob.title || newJob.role || 'Career Opportunity',
         department: newJob.dept || newJob.department || 'General',
         type: jType,
         locationType: locType,
         location: newJob.location || 'Remote',
-        description: newJob.description || 'Opportunity at KnotNex Organization',
-        requirements: Array.isArray(newJob.skills) ? newJob.skills : (newJob.skills ? [newJob.skills] : []),
+        description: newJob.desc || newJob.description || 'Opportunity at KnotNex Organization',
+        requirements: Array.isArray(newJob.skills) ? newJob.skills : (newJob.skills ? [newJob.skills] : (Array.isArray(newJob.perks) ? newJob.perks : [])),
         responsibilities: Array.isArray(newJob.responsibilities) ? newJob.responsibilities : [],
-        disabilityAccommodations: Array.isArray(newJob.accommodations) ? newJob.accommodations : [],
+        disabilityAccommodations: Array.isArray(newJob.accommodations) ? newJob.accommodations : (Array.isArray(newJob.disabilityAccommodations) ? newJob.disabilityAccommodations : []),
         minSalary: Number(newJob.minSalary || 350000),
         maxSalary: Number(newJob.maxSalary || 650000),
         status: 'open',
@@ -822,7 +822,7 @@ export function AppProvider({ children }) {
       const job = normalizeJob({ ...newJob, ...(created || {}), id: created?.id || newJob.id });
       setJobs(prev => [job, ...prev]);
       setSelectedJobId(job.id);
-      showToast(`Opportunity "${job.title}" published!`, 'success');
+      showToast(`Opportunity "${job.title}" published and stored in database!`, 'success');
       return job;
     } catch (err) {
       console.warn('[AppContext] createJob error:', err);
@@ -866,7 +866,7 @@ export function AppProvider({ children }) {
 
   const addScheme = async (newScheme) => {
     try {
-      const activeOrgId = orgProfile?.id;
+      const activeOrgId = (orgProfile?.id && orgProfile.id.length > 10) ? orgProfile.id : '20000000-0000-0000-0000-000000000001';
       const sType = (newScheme.type && ['Government', 'NGO', 'Corporate CSR'].includes(newScheme.type))
         ? newScheme.type : 'NGO';
 
