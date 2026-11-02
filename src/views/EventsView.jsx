@@ -12,7 +12,8 @@ export default function EventsView() {
     showToast,
     updateEvent,
     startEditEvent,
-    loadBackendData
+    loadBackendData,
+    openModal
   } = useApp();
 
   const handleToggleEventActive = (ev) => {
@@ -379,18 +380,39 @@ export default function EventsView() {
                       <td style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
                         {ev.date}
                       </td>
-                      <td className="col-center" style={{ width: '135px', minWidth: '135px' }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <td className="col-center" style={{ width: '190px', minWidth: '190px' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                           <button
                             className="btn-secondary"
-                            style={{ height: '32px', padding: '0 14px', fontSize: '12px', fontWeight: 600 }}
+                            style={{ height: '32px', padding: '0 10px', fontSize: '12px', fontWeight: 600 }}
                             onClick={() => selectEvent(ev.id)}
+                            title="View event details & attendees"
                           >
                             View
                           </button>
                           <button
                             className="btn-secondary"
-                            style={{ height: '32px', padding: '0 10px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', borderColor: '#D0D5DD' }}
+                            style={{
+                              height: '32px',
+                              padding: '0 8px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              borderColor: '#6336EB',
+                              color: '#6336EB',
+                              background: '#F9F5FF'
+                            }}
+                            onClick={() => openModal && openModal('modalQrGateScanner', ev)}
+                            title="Scan Attendee Gate QR Pass for this event"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>qr_code_scanner</span>
+                            <span>Scan</span>
+                          </button>
+                          <button
+                            className="btn-secondary"
+                            style={{ height: '32px', padding: '0 8px', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', borderColor: '#D0D5DD' }}
                             onClick={() => startEditEvent && startEditEvent(ev)}
                             title="Edit this event"
                           >

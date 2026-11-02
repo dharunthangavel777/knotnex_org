@@ -10,6 +10,14 @@ export const registrationsApi = {
   },
 
   /**
+   * Fetch event attendance analytics & summary
+   */
+  async getEventAttendance(eventId) {
+    const res = await apiClient.get(`/registrations/event/${eventId}/attendance`);
+    return res?.data || res;
+  },
+
+  /**
    * Fetch all registrations across the organization
    */
   async getOrgRegistrations(orgId, params = {}) {
@@ -45,10 +53,14 @@ export const registrationsApi = {
   },
 
   /**
-   * Check in attendee using QR Code hash
+   * Check in attendee using QR Code hash or ticket pass code
    */
-  async checkInByQr(qrCodeHash) {
-    const res = await apiClient.post('/registrations/check-in', { qrCodeHash });
+  async checkInByQr(qrCodeHash, eventId = null) {
+    const res = await apiClient.post('/registrations/check-in', {
+      qrCodeHash,
+      code: qrCodeHash,
+      eventId: eventId || undefined,
+    });
     return res?.data || res;
   },
 

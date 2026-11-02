@@ -1,3 +1,4 @@
+import registrationsApi from '../api/registrationsApi';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import BackButton from '../components/common/BackButton';
@@ -14,7 +15,8 @@ export default function EventDetailsView() {
     showToast,
     checkInAttendee,
     startEditEvent,
-    deleteEvent
+    deleteEvent,
+    openModal
   } = useApp();
 
   const [attendeeSearch, setAttendeeSearch] = useState('');
@@ -23,24 +25,65 @@ export default function EventDetailsView() {
   const [attendees, setAttendees] = useState([]);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
 
-  useEffect(() => {
+  const [attendanceStats, setAttendanceStats] = useState(null);
+
+  const fetchAttendance = () => {
     if (!selectedEvent?.id) return;
     let isMounted = true;
     setLoadingAttendees(true);
-    eventsApi.getEventAttendees(selectedEvent.id)
+    registrationsApi.getEventAttendance(selectedEvent.id)
       .then((data) => {
         if (isMounted) {
-          setAttendees(Array.isArray(data) ? data : []);
+          setAttendanceStats(data);
+          if (data.attendees && Array.isArray(data.attendees)) {
+            setAttendees(data.attendees);
+          }
         }
       })
       .catch(() => {
-        if (isMounted) setAttendees([]);
+        eventsApi.getEventAttendees(selectedEvent.id)
+          .then((data) => {
+            if (isMounted) setAttendees(Array.isArray(data) ? data : []);
+          })
+          .catch(() => {});
       })
       .finally(() => {
         if (isMounted) setLoadingAttendees(false);
       });
     return () => { isMounted = false; };
+  };
+
+  useEffect(() => {
+    fetchAttendance();
   }, [selectedEvent?.id]);
+
+  const handleExportAttendees = () => {
+    const listToExport = filteredRegistrations.length > 0 ? filteredRegistrations : activeRegs;
+    if (!listToExport || listToExport.length === 0) {
+      showToast('No registrations to export', 'info');
+      return;
+    }
+    const headers = ['Registration ID', 'Attendee Name', 'Email', 'Phone', 'Status', 'Checked In', 'Check-in Time', 'Registered Date'];
+    const rows = listToExport.map(r => [
+      `"${r.regId || r.ticketCode || r.id || ''}"`,
+      `"${r.name || r.userName || ''}"`,
+      `"${r.email || ''}"`,
+      `"${r.phone || ''}"`,
+      `"${r.status || 'confirmed'}"`,
+      `"${r.checkedIn || r.status === 'attended' || r.status === 'used' ? 'YES' : 'NO'}"`,
+      `"${r.checkedInAt || r.validatedAt || ''}"`,
+      `"${r.date || r.registeredDate || r.created_at || ''}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `attendees_${(ev.name || 'event').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`Exported ${listToExport.length} attendee records to CSV!`, 'success');
+  };
 
   const handleFilterChange = (newFilter) => {
     if (newFilter === attendeeFilter) return;
@@ -168,10 +211,20 @@ export default function EventDetailsView() {
 
           <div className="event-header-actions-group">
             <button
+              className="btn-header-action primary"
+              style={{ background: '#6336EB', color: '#FFFFFF', borderColor: '#6336EB', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              id="btnOpenScanGateQr"
+              onClick={() => openModal && openModal('modalQrGateScanner', ev)}
+              title="Open QR scanner for this event"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>qr_code_scanner</span>
+              <span>Scan Gate QR</span>
+            </button>
+            <button
               className="btn-header-action secondary"
               id="btnExportEvent"
-              onClick={() => showToast("Exporting attendee roster...", "info")}
-              title="Export attendee records"
+              onClick={handleExportAttendees}
+              title="Export attendee records as CSV"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

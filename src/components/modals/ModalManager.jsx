@@ -1,3 +1,5 @@
+import jsQR from 'jsqr';
+import registrationsApi from '../../api/registrationsApi';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 
@@ -47,15 +49,68 @@ export default function ModalManager() {
   const [addAttendeeForm, setAddAttendeeForm] = useState({ name: '', email: '', eventId: events?.[0]?.id || '', tier: 'General Delegate' });
   // 7. Preview tab state
   const [previewTab, setPreviewTab] = useState('page');
-  // 8. Gate scan success state
+  // 8. Gate scan state with real-time video decoder
   const [scanResult, setScanResult] = useState(null);
   const [manualPassInput, setManualPassInput] = useState('');
   const [cameraActive, setCameraActive] = useState(false);
+  const [isVerifyingScan, setIsVerifyingScan] = useState(false);
   const qrVideoRef = React.useRef(null);
+  const lastScannedCodeRef = React.useRef(null);
+  const scanIntervalRef = React.useRef(null);
+
+  const handleVerifyPassCode = async (codeToVerify) => {
+    if (!codeToVerify || isVerifyingScan) return;
+    setIsVerifyingScan(true);
+
+    const targetEventId = modalData?.id;
+    try {
+      const res = await registrationsApi.checkInByQr(codeToVerify, targetEventId);
+      if (res?.alreadyCheckedIn) {
+        setScanResult({
+          type: 'warning',
+          title: 'Already Checked In',
+          message: 'This Registration Has Already Been Checked In.',
+          attendee: res.attendee || 'Attendee',
+          event: res.event || modalData?.name || modalData?.title,
+          time: res.checkedInAt ? new Date(res.checkedInAt).toLocaleTimeString() : 'Earlier',
+          code: res.ticketCode || codeToVerify,
+        });
+        showToast(`⚠️ Already checked in: ${res.attendee || ''}`, 'warning');
+      } else {
+        setScanResult({
+          type: 'success',
+          title: 'Attendance Verified',
+          message: 'Registration Verified – Attendance Marked Successfully.',
+          attendee: res.attendee || 'Delegate',
+          event: res.event || modalData?.name || modalData?.title,
+          time: new Date().toLocaleTimeString(),
+          code: res.ticketCode || codeToVerify,
+        });
+        showToast(`✅ Check-in verified for ${res.attendee || 'Delegate'}!`, 'success');
+        if (checkInAttendee) {
+          checkInAttendee(codeToVerify, targetEventId);
+        }
+      }
+    } catch (err) {
+      const isWrongEvent = err.message?.includes('Another Event') || err.data?.isWrongEvent;
+      setScanResult({
+        type: 'error',
+        title: isWrongEvent ? 'Wrong Event QR' : 'Verification Failed',
+        message: err.message || 'Invalid QR Code – Registration Not Found.',
+        attendee: err.data?.attendee,
+        event: err.data?.scannedEventTitle,
+        code: codeToVerify,
+      });
+      showToast(err.message || 'Invalid or revoked QR pass', 'error');
+    } finally {
+      setIsVerifyingScan(false);
+    }
+  };
 
   useEffect(() => {
     let stream = null;
     if (activeModal === 'modalQrGateScanner') {
+      lastScannedCodeRef.current = null;
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
           .then((s) => {
@@ -64,6 +119,29 @@ export default function ModalManager() {
             if (qrVideoRef.current) {
               qrVideoRef.current.srcObject = s;
             }
+
+            // Real-time canvas frame decoder using jsQR
+            scanIntervalRef.current = setInterval(() => {
+              const video = qrVideoRef.current;
+              if (!video || video.readyState < 2 || isVerifyingScan) return;
+              try {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 320;
+                canvas.height = video.videoHeight || 240;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                  const decoded = jsQR(imgData.data, imgData.width, imgData.height, {
+                    inversionAttempts: 'dontInvert',
+                  });
+                  if (decoded && decoded.data && decoded.data !== lastScannedCodeRef.current) {
+                    lastScannedCodeRef.current = decoded.data;
+                    handleVerifyPassCode(decoded.data);
+                  }
+                }
+              } catch (_) {}
+            }, 300);
           })
           .catch((err) => {
             console.warn('[QR Scanner] Camera stream unavailable:', err);
@@ -74,9 +152,18 @@ export default function ModalManager() {
       setCameraActive(false);
       setScanResult(null);
       setManualPassInput('');
+      lastScannedCodeRef.current = null;
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
+      }
     }
 
     return () => {
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
+      }
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
@@ -1371,21 +1458,30 @@ export default function ModalManager() {
       {/* 11. modalQrGateScanner */}
       {activeModal === 'modalQrGateScanner' && (
         <div className="modal-backdrop open" style={{ display: 'flex' }} onClick={handleBackdropClick}>
-          <div className="modal-dialog" style={{ maxWidth: '440px', width: '90%', textAlign: 'center' }}>
-            <div className="modal-header">
-              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="material-symbols-outlined" style={{ color: '#6336EB' }}>qr_code_scanner</span>
-                Turnstile QR Gate Scanner
-              </h3>
+          <div className="modal-dialog" style={{ maxWidth: '480px', width: '92%', textAlign: 'center', borderRadius: '24px', overflow: 'hidden' }}>
+            <div className="modal-header" style={{ padding: '18px 24px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+              <div>
+                <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '17px', fontWeight: '700', color: '#0F172A' }}>
+                  <span className="material-symbols-outlined" style={{ color: '#6336EB', fontSize: '22px' }}>qr_code_scanner</span>
+                  Gate Turnstile QR Scanner
+                </h3>
+                {modalData?.name && (
+                  <p style={{ margin: '4px 0 0 30px', fontSize: '12.5px', color: '#64748B', textAlign: 'left', fontWeight: '500' }}>
+                    Event: <strong style={{ color: '#6336EB' }}>{modalData.name}</strong>
+                  </p>
+                )}
+              </div>
               <button className="modal-close-btn" onClick={closeModal}>&times;</button>
             </div>
+
             <div className="modal-body" style={{ padding: '24px 20px' }}>
-              <div style={{ position: 'relative', width: '220px', height: '220px', margin: '0 auto 20px', background: '#0F172A', borderRadius: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* Viewfinder Frame */}
+              <div style={{ position: 'relative', width: '240px', height: '240px', margin: '0 auto 20px', background: '#0F172A', borderRadius: '20px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.18)' }}>
                 {/* Viewfinder borders */}
-                <div style={{ position: 'absolute', top: '12px', left: '12px', width: '24px', height: '24px', borderTop: '3px solid #6336EB', borderLeft: '3px solid #6336EB', zIndex: 2 }} />
-                <div style={{ position: 'absolute', top: '12px', right: '12px', width: '24px', height: '24px', borderTop: '3px solid #6336EB', borderRight: '3px solid #6336EB', zIndex: 2 }} />
-                <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '24px', height: '24px', borderBottom: '3px solid #6336EB', borderLeft: '3px solid #6336EB', zIndex: 2 }} />
-                <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '24px', height: '24px', borderBottom: '3px solid #6336EB', borderRight: '3px solid #6336EB', zIndex: 2 }} />
+                <div style={{ position: 'absolute', top: '12px', left: '12px', width: '28px', height: '28px', borderTop: '3px solid #6336EB', borderLeft: '3px solid #6336EB', zIndex: 2 }} />
+                <div style={{ position: 'absolute', top: '12px', right: '12px', width: '28px', height: '28px', borderTop: '3px solid #6336EB', borderRight: '3px solid #6336EB', zIndex: 2 }} />
+                <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '28px', height: '28px', borderBottom: '3px solid #6336EB', borderLeft: '3px solid #6336EB', zIndex: 2 }} />
+                <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '28px', height: '28px', borderBottom: '3px solid #6336EB', borderRight: '3px solid #6336EB', zIndex: 2 }} />
 
                 {/* Video feed element */}
                 <video
@@ -1402,60 +1498,95 @@ export default function ModalManager() {
                 />
 
                 {!cameraActive && (
-                  <span className="material-symbols-outlined" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.2)' }}>
-                    videocam
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#94A3B8' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px' }}>videocam</span>
+                    <span style={{ fontSize: '12px' }}>Camera Inactive / Manual Input</span>
+                  </div>
                 )}
 
                 {/* Laser scan line animation */}
-                <div style={{ position: 'absolute', width: '100%', height: '2px', background: '#12B76A', boxShadow: '0 0 10px #12B76A', animation: 'scanLaser 2s infinite ease-in-out', zIndex: 3 }} />
+                <div style={{ position: 'absolute', width: '100%', height: '2px', background: '#12B76A', boxShadow: '0 0 12px #12B76A', animation: 'scanLaser 2s infinite ease-in-out', zIndex: 3 }} />
               </div>
 
-              {scanResult ? (
-                <div style={{ background: '#ECFDF3', color: '#12B76A', padding: '14px', borderRadius: '12px', fontWeight: 600, fontSize: '13.5px', marginBottom: '16px' }}>
-                  ✓ Pass {scanResult} Validated! Gate Unlocked.
+              {/* Scan Result Feedback Card */}
+              {scanResult && (
+                <div style={{
+                  padding: '16px',
+                  borderRadius: '16px',
+                  marginBottom: '16px',
+                  textAlign: 'left',
+                  background: scanResult.type === 'success' ? '#ECFDF3' : (scanResult.type === 'warning' ? '#FEF0C7' : '#FEF3F2'),
+                  border: `1.5px solid ${scanResult.type === 'success' ? '#12B76A' : (scanResult.type === 'warning' ? '#F79009' : '#FDA29B')}`,
+                  color: scanResult.type === 'success' ? '#027A48' : (scanResult.type === 'warning' ? '#B54708' : '#B42318'),
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                      {scanResult.type === 'success' ? 'check_circle' : (scanResult.type === 'warning' ? 'warning' : 'error')}
+                    </span>
+                    <strong style={{ fontSize: '14px' }}>{scanResult.title || scanResult.message}</strong>
+                  </div>
+
+                  <p style={{ margin: '0 0 8px', fontSize: '13px', lineHeight: '1.4' }}>
+                    {scanResult.message}
+                  </p>
+
+                  {scanResult.attendee && (
+                    <div style={{ fontSize: '12.5px', marginTop: '6px', opacity: 0.9 }}>
+                      <div><strong>Delegate:</strong> {scanResult.attendee}</div>
+                      {scanResult.time && <div><strong>Time:</strong> {scanResult.time}</div>}
+                      {scanResult.code && <div><strong>Pass Code:</strong> <code>{scanResult.code}</code></div>}
+                    </div>
+                  )}
+
+                  <button
+                    className="btn-secondary"
+                    style={{ marginTop: '12px', width: '100%', height: '32px', fontSize: '12px', fontWeight: 600, background: '#FFFFFF' }}
+                    onClick={() => {
+                      lastScannedCodeRef.current = null;
+                      setScanResult(null);
+                    }}
+                  >
+                    Scan Next Attendee
+                  </button>
                 </div>
-              ) : (
-                <p style={{ fontSize: '13px', color: 'var(--neutral-500)', marginBottom: '16px' }}>
-                  {cameraActive ? 'WebRTC Camera active. Align delegate QR code inside the frame.' : 'WebRTC Camera or manual code input. Align pass or enter code below.'}
+              )}
+
+              {/* Instructions */}
+              {!scanResult && (
+                <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '16px' }}>
+                  {cameraActive ? 'Camera active. Align delegate QR code inside frame for automatic verification.' : 'Align pass in camera or enter Pass Code / QR Hash below.'}
                 </p>
               )}
 
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              {/* Manual Pass Code Verification */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
                 <input
                   type="text"
                   className="form-input"
                   style={{ flex: 1, fontSize: '13px' }}
-                  placeholder="Paste QR Code Hash or Pass ID..."
+                  placeholder="Paste QR Code Hash or Pass Code..."
                   value={manualPassInput}
                   onChange={(e) => setManualPassInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && manualPassInput.trim()) {
+                      handleVerifyPassCode(manualPassInput.trim());
+                      setManualPassInput('');
+                    }
+                  }}
                 />
                 <button
                   className="btn-primary"
-                  style={{ padding: '0 14px', fontSize: '13px' }}
-                  disabled={!manualPassInput.trim()}
+                  style={{ padding: '0 18px', fontSize: '13px', background: '#6336EB' }}
+                  disabled={!manualPassInput.trim() || isVerifyingScan}
                   onClick={() => {
                     const code = manualPassInput.trim();
-                    checkInAttendee(code);
-                    setScanResult(code);
+                    handleVerifyPassCode(code);
                     setManualPassInput('');
                   }}
                 >
-                  Verify
+                  {isVerifyingScan ? 'Verifying...' : 'Verify'}
                 </button>
               </div>
-
-              <button
-                className="btn-secondary"
-                style={{ width: '100%', justifyContent: 'center', fontSize: '13px' }}
-                onClick={() => {
-                  const targetCode = registrations?.[0]?.ticketCode || registrations?.[0]?.qr_code_hash || registrations?.[0]?.id || 'PASS-SCAN-VERIFIED';
-                  checkInAttendee(targetCode);
-                  setScanResult(targetCode);
-                }}
-              >
-                Scan Next Attendee ({registrations?.[0]?.ticketCode || registrations?.[0]?.qr_code_hash?.slice(0, 8)?.toUpperCase() || 'Turnstile QR'})
-              </button>
             </div>
           </div>
         </div>
