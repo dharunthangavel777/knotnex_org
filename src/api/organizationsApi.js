@@ -13,16 +13,6 @@ export const organizationsApi = {
     } catch {
       // ignore
     }
-
-    try {
-      const res = await apiClient.get('/organizations', { limit: 1 });
-      const orgs = res?.data?.items || res?.data || [];
-      if (orgs.length > 0) {
-        return orgs[0];
-      }
-    } catch (e) {
-      console.warn('[organizationsApi] Error fetching organization list:', e.message);
-    }
     return null;
   },
 

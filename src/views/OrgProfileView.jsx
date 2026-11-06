@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import apiClient from '../api/apiClient';
 
 export default function OrgProfileView() {
-  const { orgProfile, updateOrgProfile, setOrgProfile, setIsLoggedIn, showToast } = useApp();
+  const { orgProfile, updateOrgProfile, setOrgProfile, logout, showToast } = useApp();
 
   const [formData, setFormData] = useState({
     ...orgProfile,
@@ -112,10 +112,7 @@ export default function OrgProfileView() {
             type="button"
             className="btn-settings-logout-action"
             id="btnOrgProfileLogout"
-            onClick={() => {
-              setIsLoggedIn(false);
-              showToast('Logged out of admin console');
-            }}
+            onClick={logout}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

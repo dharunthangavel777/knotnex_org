@@ -270,6 +270,28 @@ export function AppProvider({ children }) {
     setSsoError(null);
   };
 
+  const logout = () => {
+    authApi.logout();
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+    setOrgProfile(null);
+    setEvents([]);
+    setJobs([]);
+    setSchemes([]);
+    setRegistrations([]);
+    setTickets([]);
+    setCampaigns([]);
+    setAchievements([]);
+    setContentPosts([]);
+    try {
+      localStorage.removeItem('knotnex_token');
+      localStorage.removeItem('knotnex_user');
+      localStorage.removeItem('knotnex_org');
+      sessionStorage.clear();
+    } catch (_) {}
+    showToast('Logged out successfully');
+  };
+
   // Main Domain Collections — All initialized to EMPTY arrays (100% Real Backend Data Only)
   const [events, setEvents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
@@ -386,14 +408,7 @@ export function AppProvider({ children }) {
       let activeOrg = orgProfile;
       if (!activeOrg || !activeOrg.id) {
         activeOrg = await organizationsApi.getMyOrganization();
-        if (!activeOrg || !activeOrg.id) {
-          try {
-            const orgsRes = await apiClient.get('/organizations');
-            const list = Array.isArray(orgsRes?.data) ? orgsRes.data : [];
-            if (list.length > 0) activeOrg = list[0];
-          } catch (_) {}
-        }
-        if (activeOrg) {
+        if (activeOrg && activeOrg.id) {
           setOrgProfile(activeOrg);
           try {
             localStorage.setItem('knotnex_org', JSON.stringify(activeOrg));
@@ -401,7 +416,10 @@ export function AppProvider({ children }) {
         }
       }
 
-      const targetOrgId = orgId || activeOrg?.id || orgProfile?.id || '20000000-0000-0000-0000-000000000001';
+      const targetOrgId = orgId || activeOrg?.id || orgProfile?.id;
+      if (!targetOrgId) {
+        return;
+      }
 
       const [
         backendEvents,
@@ -683,14 +701,7 @@ export function AppProvider({ children }) {
 
         if (!activeOrg || !activeOrg.id) {
           activeOrg = await organizationsApi.getMyOrganization();
-          if (!activeOrg || !activeOrg.id) {
-            try {
-              const orgsRes = await apiClient.get('/organizations');
-              const list = Array.isArray(orgsRes?.data) ? orgsRes.data : (Array.isArray(orgsRes) ? orgsRes : []);
-              if (list.length > 0) activeOrg = list[0];
-            } catch (_) {}
-          }
-          if (activeOrg && isMounted) {
+          if (activeOrg && activeOrg.id && isMounted) {
             setOrgProfile(activeOrg);
             localStorage.setItem('knotnex_org', JSON.stringify(activeOrg));
           }
@@ -1465,6 +1476,7 @@ export function AppProvider({ children }) {
     // Auth & SSO
     isLoggedIn,
     setIsLoggedIn,
+    logout,
     ssoError,
     currentUser,
     devBypass,
