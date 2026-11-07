@@ -31,6 +31,7 @@ import TicketsView from './views/TicketsView';
 import HelpCenterView from './views/HelpCenterView';
 import SettingsView from './views/SettingsView';
 import NotificationsView from './views/NotificationsView';
+import MessagesView from './views/MessagesView';
 import FirewallGate from './components/common/FirewallGate';
 
 function AppContent() {
@@ -126,6 +127,8 @@ function AppContent() {
         return <SettingsView />;
       case 'notifications':
         return <NotificationsView />;
+      case 'messages':
+        return <MessagesView />;
       default:
         return <DashboardView />;
     }
