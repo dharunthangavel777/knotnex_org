@@ -1,7 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import BackButton from '../../../components/common/BackButton';
 
-export default function CoverCropScreen({ imageSrc, initialEventName, onApply, onCancel, onUploadNew }) {
+export default function CoverCropScreen({
+  imageSrc,
+  initialEventName,
+  onApply,
+  onCancel,
+  onUploadNew,
+  type = 'event', // 'event' | 'scheme'
+  category = '',
+  ticketPrice = ''
+}) {
   const [currentSrc, setCurrentSrc] = useState(imageSrc);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgNaturalSize, setImgNaturalSize] = useState({ width: 0, height: 0 });
@@ -11,10 +20,26 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
   const [dragStart, setDragStart] = useState({ mouseX: 0, mouseY: 0, boxX: 0, boxY: 0, boxW: 0, boxH: 0 });
   const [previewUrl, setPreviewUrl] = useState(null);
   const [showLivePreview, setShowLivePreview] = useState(false);
+  const [showSafeZone, setShowSafeZone] = useState(true);
+
+  // Aspect Ratio presets standardized to KnotNex Flutter User App
+  const RATIO_PRESETS = type === 'scheme' ? [
+    { id: 'card_scheme', label: 'KnotNex Scheme Card', ratio: 304 / 171, desc: 'Exact Mobile 16:9 Card (304x171)' },
+    { id: 'hero_4_3', label: 'Mobile Detail Hero', ratio: 4 / 3, desc: 'Mobile Header (4:3)' },
+    { id: 'square_1_1', label: 'Square Standard', ratio: 1.0, desc: 'Square Tile (1:1)' }
+  ] : [
+    { id: 'card_event', label: 'KnotNex Event Card', ratio: 304 / 142, desc: 'Exact Mobile Card (304x142)' },
+    { id: 'universal_16_9', label: 'Universal 16:9', ratio: 16 / 9, desc: 'Standard 1920x1080 Media' },
+    { id: 'hero_4_3', label: 'Mobile Detail Hero', ratio: 4 / 3, desc: 'Detail Screen (4:3)' },
+    { id: 'desktop_3_1', label: 'Desktop Banner', ratio: 3.0, desc: 'Wide Web Banner (3:1)' }
+  ];
+
+  const [selectedRatioId, setSelectedRatioId] = useState(RATIO_PRESETS[0].id);
+  const currentRatioObj = RATIO_PRESETS.find(p => p.id === selectedRatioId) || RATIO_PRESETS[0];
+  const cropRatio = currentRatioObj.ratio;
 
   const containerRef = useRef(null);
   const imgRef = useRef(null);
-  const CROP_RATIO = 4.8; // Aspect ratio of event banner header (~1200 / 250)
 
   // Sync currentSrc if imageSrc prop changes
   useEffect(() => {
@@ -22,7 +47,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
   }, [imageSrc]);
 
   // Measure rendered image and initialize crop selection box
-  const measureAndInit = () => {
+  const measureAndInit = (activeRatio = cropRatio) => {
     const container = containerRef.current;
     const img = imgRef.current;
     if (!container || !img) return;
@@ -35,7 +60,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
     const maxH = Math.max(200, ch - padding * 2);
 
     const nw = img.naturalWidth || 1200;
-    const nh = img.naturalHeight || 400;
+    const nh = img.naturalHeight || 600;
     setImgNaturalSize({ width: nw, height: nh });
 
     let rw, rh, rx, ry;
@@ -54,22 +79,27 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
     const rRect = { x: rx, y: ry, width: rw, height: rh };
     setRenderedRect(rRect);
 
-    // Initial crop box fitting within renderedRect with CROP_RATIO (4.8:1)
+    // Initial crop box fitting within renderedRect with activeRatio
     let bw, bh, bx, by;
-    if (rw / rh >= CROP_RATIO) {
+    if (rw / rh >= activeRatio) {
       bh = rh;
-      bw = rh * CROP_RATIO;
+      bw = rh * activeRatio;
       bx = rx + (rw - bw) / 2;
       by = ry;
     } else {
       bw = rw;
-      bh = rw / CROP_RATIO;
+      bh = rw / activeRatio;
       bx = rx;
       by = ry + (rh - bh) / 2;
     }
 
     setCropBox({ x: bx, y: by, width: bw, height: bh });
     setImgLoaded(true);
+  };
+
+  const handleRatioChange = (preset) => {
+    setSelectedRatioId(preset.id);
+    measureAndInit(preset.ratio);
   };
 
   const handleImageLoad = () => {
@@ -81,11 +111,11 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
     if (imgRef.current && imgRef.current.complete) {
       measureAndInit();
     }
-  }, [currentSrc]);
+  }, [currentSrc, selectedRatioId]);
 
   useEffect(() => {
-    window.addEventListener('resize', measureAndInit);
-    return () => window.removeEventListener('resize', measureAndInit);
+    window.addEventListener('resize', () => measureAndInit());
+    return () => window.removeEventListener('resize', () => measureAndInit());
   }, []);
 
   // Generate live banner preview when cropBox changes
@@ -95,7 +125,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
       try {
         const canvas = document.createElement('canvas');
         canvas.width = 600;
-        canvas.height = Math.round(600 / CROP_RATIO);
+        canvas.height = Math.round(600 / cropRatio);
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
@@ -107,13 +137,13 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
         const sh = Math.min(imgNaturalSize.height - sy, cropBox.height * scaleY);
 
         ctx.drawImage(imgRef.current, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-        setPreviewUrl(canvas.toDataURL('image/jpeg', 0.85));
+        setPreviewUrl(canvas.toDataURL('image/jpeg', 0.88));
       } catch (err) {
         console.error('Preview crop error:', err);
       }
     }, 40);
     return () => clearTimeout(timer);
-  }, [cropBox, imgLoaded, renderedRect, imgNaturalSize, currentSrc]);
+  }, [cropBox, imgLoaded, renderedRect, imgNaturalSize, currentSrc, cropRatio]);
 
   // Rotate 90 degrees clockwise using offscreen canvas
   const handleRotate = () => {
@@ -139,10 +169,10 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
   };
 
   // Start drag (move or corner resize)
-  const handleStartDrag = (type, e) => {
+  const handleStartDrag = (dragType, e) => {
     e.preventDefault();
     e.stopPropagation();
-    setActiveDrag(type);
+    setActiveDrag(dragType);
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     setDragStart({
@@ -155,7 +185,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
     });
   };
 
-  // Global mouse/touch move listener for smooth WhatsApp-style drag & resize
+  // Global mouse/touch move listener for smooth drag & resize
   useEffect(() => {
     if (!activeDrag) return;
 
@@ -169,7 +199,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
       const imgY = renderedRect.y;
       const imgW = renderedRect.width;
       const imgH = renderedRect.height;
-      const minW = 140;
+      const minW = 120;
 
       if (activeDrag === 'move') {
         const minX = imgX;
@@ -183,30 +213,30 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
       } else if (activeDrag === 'br') {
         const anchorX = dragStart.boxX;
         const anchorY = dragStart.boxY;
-        const maxW = Math.min(imgX + imgW - anchorX, (imgY + imgH - anchorY) * CROP_RATIO);
+        const maxW = Math.min(imgX + imgW - anchorX, (imgY + imgH - anchorY) * cropRatio);
         const clampedW = Math.max(minW, Math.min(maxW, dragStart.boxW + dx));
-        const clampedH = clampedW / CROP_RATIO;
+        const clampedH = clampedW / cropRatio;
         setCropBox({ x: anchorX, y: anchorY, width: clampedW, height: clampedH });
       } else if (activeDrag === 'tl') {
         const anchorX = dragStart.boxX + dragStart.boxW;
         const anchorY = dragStart.boxY + dragStart.boxH;
-        const maxW = Math.min(anchorX - imgX, (anchorY - imgY) * CROP_RATIO);
+        const maxW = Math.min(anchorX - imgX, (anchorY - imgY) * cropRatio);
         const clampedW = Math.max(minW, Math.min(maxW, dragStart.boxW - dx));
-        const clampedH = clampedW / CROP_RATIO;
+        const clampedH = clampedW / cropRatio;
         setCropBox({ x: anchorX - clampedW, y: anchorY - clampedH, width: clampedW, height: clampedH });
       } else if (activeDrag === 'tr') {
         const anchorX = dragStart.boxX;
         const anchorY = dragStart.boxY + dragStart.boxH;
-        const maxW = Math.min(imgX + imgW - anchorX, (anchorY - imgY) * CROP_RATIO);
+        const maxW = Math.min(imgX + imgW - anchorX, (anchorY - imgY) * cropRatio);
         const clampedW = Math.max(minW, Math.min(maxW, dragStart.boxW + dx));
-        const clampedH = clampedW / CROP_RATIO;
+        const clampedH = clampedW / cropRatio;
         setCropBox({ x: anchorX, y: anchorY - clampedH, width: clampedW, height: clampedH });
       } else if (activeDrag === 'bl') {
         const anchorX = dragStart.boxX + dragStart.boxW;
         const anchorY = dragStart.boxY;
-        const maxW = Math.min(anchorX - imgX, (imgY + imgH - anchorY) * CROP_RATIO);
+        const maxW = Math.min(anchorX - imgX, (imgY + imgH - anchorY) * cropRatio);
         const clampedW = Math.max(minW, Math.min(maxW, dragStart.boxW - dx));
-        const clampedH = clampedW / CROP_RATIO;
+        const clampedH = clampedW / cropRatio;
         setCropBox({ x: anchorX - clampedW, y: anchorY, width: clampedW, height: clampedH });
       }
     };
@@ -224,7 +254,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
       window.removeEventListener('touchmove', handleMouseMove);
       window.removeEventListener('touchend', handleMouseUp);
     };
-  }, [activeDrag, dragStart, renderedRect]);
+  }, [activeDrag, dragStart, renderedRect, cropRatio]);
 
   // Snap position helpers
   const snapTo = (pos) => {
@@ -241,7 +271,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
     else if (pos === 'right') setCropBox(c => ({ ...c, x: maxX }));
   };
 
-  // Final apply: Crop to 1200x250 canvas
+  // Final apply: Crop to standardized high-res canvas (1200 x height)
   const handleApply = () => {
     if (!imgRef.current || cropBox.width <= 0 || renderedRect.width <= 0) {
       onApply(currentSrc);
@@ -250,7 +280,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
     try {
       const canvas = document.createElement('canvas');
       canvas.width = 1200;
-      canvas.height = Math.round(1200 / CROP_RATIO); // 250px
+      canvas.height = Math.round(1200 / cropRatio);
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         onApply(currentSrc);
@@ -286,27 +316,95 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
         overflow: 'hidden'
       }}
     >
-      {/* 1. Top Header Bar */}
+      {/* 1. Top Header Bar with Standardized Aspect Ratio Selector */}
       <div
         style={{
-          height: 64,
-          padding: '0 24px',
+          minHeight: 64,
+          padding: '10px 24px',
           background: '#FFFFFF',
           borderBottom: '1px solid #E2E8F0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
           zIndex: 20
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <BackButton
             onClick={onCancel}
-            title="Cancel and return to event form"
+            title="Cancel and return"
           />
+          <div>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F172A' }}>
+              {type === 'scheme' ? 'Standardize Scheme Banner' : 'Standardize Event Banner'}
+            </div>
+            <div style={{ fontSize: 11.5, color: '#64748B' }}>
+              Optimized for KnotNex User App mobile screens
+            </div>
+          </div>
+        </div>
+
+        {/* Aspect Ratio Presets */}
+        <div style={{ display: 'flex', alignItems: 'center', background: '#F1F5F9', padding: '3px', borderRadius: 10, gap: 4 }}>
+          {RATIO_PRESETS.map((preset) => {
+            const isActive = preset.id === selectedRatioId;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => handleRatioChange(preset)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: isActive ? '#6336EB' : 'transparent',
+                  color: isActive ? '#FFFFFF' : '#475569',
+                  fontSize: 12,
+                  fontWeight: isActive ? 700 : 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                title={preset.desc}
+              >
+                <span>{preset.label}</span>
+                {isActive && (
+                  <span style={{ fontSize: 10, opacity: 0.85, background: 'rgba(255,255,255,0.2)', padding: '1px 5px', borderRadius: 4 }}>
+                    Active
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => setShowSafeZone(!showSafeZone)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              background: showSafeZone ? '#EEF2FF' : '#F8FAFC',
+              border: showSafeZone ? '1.5px solid #6336EB' : '1.5px solid #CBD5E1',
+              borderRadius: 10,
+              padding: '7px 12px',
+              color: showSafeZone ? '#6336EB' : '#475569',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+            title="Toggle mobile safe area overlay"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+            Safe Zone
+          </button>
+
           <label
             style={{
               display: 'flex',
@@ -315,30 +413,28 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
               background: '#F8FAFC',
               border: '1.5px solid #CBD5E1',
               borderRadius: 10,
-              padding: '8px 16px',
+              padding: '7px 14px',
               color: '#334155',
-              fontSize: 12.5,
+              fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.15s ease'
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#F1F5F9'; e.currentTarget.style.borderColor = '#6336EB'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#CBD5E1'; }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Change Photo
             <input type="file" accept="image/*" onChange={onUploadNew} style={{ display: 'none' }} />
           </label>
         </div>
       </div>
 
-      {/* 2. Main Workspace: Shows the image alone on white canvas with WhatsApp DP Crop Frame */}
+      {/* 2. Main Workspace with Interactive Crop Frame & Mobile Safe Zone */}
       <div
         ref={containerRef}
         style={{
           flex: 1,
           position: 'relative',
-          background: '#FFFFFF',
+          background: '#F8FAFC',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -349,7 +445,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
         <img
           ref={imgRef}
           src={currentSrc}
-          alt="Cover Crop Source"
+          alt="Source"
           onLoad={handleImageLoad}
           style={{
             maxWidth: 'calc(100% - 60px)',
@@ -362,7 +458,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
           }}
         />
 
-        {/* WhatsApp DP Crop Window */}
+        {/* WhatsApp-Style Crop Window */}
         {imgLoaded && cropBox.width > 0 && (
           <div
             onMouseDown={(e) => handleStartDrag('move', e)}
@@ -373,7 +469,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
               top: cropBox.y,
               width: cropBox.width,
               height: cropBox.height,
-              boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.58)',
+              boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.62)',
               border: '2px solid #FFFFFF',
               outline: '2px solid #6336EB',
               cursor: activeDrag === 'move' ? 'grabbing' : 'grab',
@@ -384,102 +480,79 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
               zIndex: 10
             }}
           >
-            {/* Rule-of-Thirds Grid Lines (3x3 grid) */}
-            <div style={{ position: 'absolute', left: '33.33%', top: 0, bottom: 0, width: 1, background: 'rgba(255, 255, 255, 0.45)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', left: '66.66%', top: 0, bottom: 0, width: 1, background: 'rgba(255, 255, 255, 0.45)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: '33.33%', left: 0, right: 0, height: 1, background: 'rgba(255, 255, 255, 0.45)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: '66.66%', left: 0, right: 0, height: 1, background: 'rgba(255, 255, 255, 0.45)', pointerEvents: 'none' }} />
+            {/* Rule of Thirds */}
+            <div style={{ position: 'absolute', left: '33.33%', top: 0, bottom: 0, width: 1, background: 'rgba(255, 255, 255, 0.35)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', left: '66.66%', top: 0, bottom: 0, width: 1, background: 'rgba(255, 255, 255, 0.35)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: '33.33%', left: 0, right: 0, height: 1, background: 'rgba(255, 255, 255, 0.35)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: '66.66%', left: 0, right: 0, height: 1, background: 'rgba(255, 255, 255, 0.35)', pointerEvents: 'none' }} />
 
-            {/* WhatsApp Corner Brackets (L-shaped handles) */}
-            {/* Top-Left */}
+            {/* Mobile Title & Logo Safe Zone Frame */}
+            {showSafeZone && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '12% 10%',
+                  border: '1.5px dashed rgba(254, 240, 138, 0.85)',
+                  borderRadius: 8,
+                  pointerEvents: 'none',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'flex-end',
+                  padding: '4px 6px'
+                }}
+              >
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#FEF08A', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: 4, letterSpacing: '0.03em' }}>
+                  Title Safe Zone
+                </span>
+              </div>
+            )}
+
+            {/* Corner Bracket Handles */}
             <div
               onMouseDown={(e) => handleStartDrag('tl', e)}
               onTouchStart={(e) => handleStartDrag('tl', e)}
               title="Drag corner to resize"
-              style={{
-                position: 'absolute',
-                top: -5,
-                left: -5,
-                width: 28,
-                height: 28,
-                cursor: 'nwse-resize',
-                zIndex: 15,
-                display: 'flex'
-              }}
+              style={{ position: 'absolute', top: -5, left: -5, width: 28, height: 28, cursor: 'nwse-resize', zIndex: 15, display: 'flex' }}
             >
               <div style={{ width: 18, height: 18, borderTop: '4px solid #FFFFFF', borderLeft: '4px solid #FFFFFF', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} />
             </div>
 
-            {/* Top-Right */}
             <div
               onMouseDown={(e) => handleStartDrag('tr', e)}
               onTouchStart={(e) => handleStartDrag('tr', e)}
               title="Drag corner to resize"
-              style={{
-                position: 'absolute',
-                top: -5,
-                right: -5,
-                width: 28,
-                height: 28,
-                cursor: 'nesw-resize',
-                zIndex: 15,
-                display: 'flex',
-                justifyContent: 'flex-end'
-              }}
+              style={{ position: 'absolute', top: -5, right: -5, width: 28, height: 28, cursor: 'nesw-resize', zIndex: 15, display: 'flex', justifyContent: 'flex-end' }}
             >
               <div style={{ width: 18, height: 18, borderTop: '4px solid #FFFFFF', borderRight: '4px solid #FFFFFF', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} />
             </div>
 
-            {/* Bottom-Left */}
             <div
               onMouseDown={(e) => handleStartDrag('bl', e)}
               onTouchStart={(e) => handleStartDrag('bl', e)}
               title="Drag corner to resize"
-              style={{
-                position: 'absolute',
-                bottom: -5,
-                left: -5,
-                width: 28,
-                height: 28,
-                cursor: 'nesw-resize',
-                zIndex: 15,
-                display: 'flex',
-                alignItems: 'flex-end'
-              }}
+              style={{ position: 'absolute', bottom: -5, left: -5, width: 28, height: 28, cursor: 'nesw-resize', zIndex: 15, display: 'flex', alignItems: 'flex-end' }}
             >
               <div style={{ width: 18, height: 18, borderBottom: '4px solid #FFFFFF', borderLeft: '4px solid #FFFFFF', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} />
             </div>
 
-            {/* Bottom-Right */}
             <div
               onMouseDown={(e) => handleStartDrag('br', e)}
               onTouchStart={(e) => handleStartDrag('br', e)}
               title="Drag corner to resize"
-              style={{
-                position: 'absolute',
-                bottom: -5,
-                right: -5,
-                width: 28,
-                height: 28,
-                cursor: 'nwse-resize',
-                zIndex: 15,
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'flex-end'
-              }}
+              style={{ position: 'absolute', bottom: -5, right: -5, width: 28, height: 28, cursor: 'nwse-resize', zIndex: 15, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}
             >
               <div style={{ width: 18, height: 18, borderBottom: '4px solid #FFFFFF', borderRight: '4px solid #FFFFFF', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }} />
             </div>
 
-            {/* Center Indicator Pill */}
+            {/* Center Status Pill */}
             <div
               style={{
                 background: 'rgba(15, 23, 42, 0.88)',
                 backdropFilter: 'blur(8px)',
                 color: '#FFF',
-                padding: '6px 16px',
+                padding: '6px 14px',
                 borderRadius: 20,
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
@@ -489,8 +562,7 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
                 userSelect: 'none'
               }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="8 18 12 22 16 18"/><polyline points="8 6 12 2 16 6"/><line x1="12" y1="3" x2="12" y2="22"/></svg>
-              <span>{activeDrag === 'move' ? 'Moving portion...' : (activeDrag ? 'Resizing frame...' : 'Drag frame or corner brackets')}</span>
+              <span>{activeDrag === 'move' ? 'Moving portion...' : (activeDrag ? 'Resizing frame...' : `${currentRatioObj.label} (${Math.round(cropBox.width)}×${Math.round(cropBox.height)})`)}</span>
             </div>
           </div>
         )}
@@ -534,8 +606,6 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
               cursor: 'pointer',
               transition: 'all 0.15s ease'
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#6336EB'; e.currentTarget.style.color = '#6336EB'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.color = '#1E1B4B'; }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
             Rotate 90°
@@ -566,8 +636,6 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#6336EB'; e.currentTarget.style.color = '#6336EB'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.color = '#334155'; }}
             >
               {b.label}
             </button>
@@ -589,13 +657,11 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
               cursor: 'pointer',
               padding: '6px 8px'
             }}
-            onMouseEnter={e => e.currentTarget.style.color = '#1E1B4B'}
-            onMouseLeave={e => e.currentTarget.style.color = '#64748B'}
           >
             Reset
           </button>
 
-          {/* Live Preview Toggle */}
+          {/* Live Mobile Card Preview Toggle */}
           <button
             type="button"
             onClick={() => setShowLivePreview(!showLivePreview)}
@@ -614,32 +680,35 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
               transition: 'all 0.15s ease'
             }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="2"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-            {showLivePreview ? 'Hide Preview' : 'Live Header Preview'}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            {showLivePreview ? 'Hide Mobile Card' : 'KnotNex Mobile Card Preview'}
           </button>
         </div>
 
-        {/* Floating Live Header Preview Flyout */}
+        {/* Floating Live KnotNex Mobile Card Preview Flyout */}
         {showLivePreview && previewUrl && (
           <div
             style={{
               position: 'absolute',
               top: 20,
               right: 24,
-              width: 320,
+              width: 330,
               background: '#FFFFFF',
               border: '1.5px solid #E2E8F0',
-              borderRadius: 16,
-              padding: 14,
-              boxShadow: '0 12px 36px rgba(0,0,0,0.12)',
+              borderRadius: 20,
+              padding: 16,
+              boxShadow: '0 16px 40px rgba(0,0,0,0.16)',
               zIndex: 40,
               animation: 'fadeIn 0.2s ease'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#6336EB', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Event Header Preview
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#6336EB', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  KnotNex User App Preview
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowLivePreview(false)}
@@ -648,28 +717,129 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
                 ✕
               </button>
             </div>
-            <div
-              style={{
-                position: 'relative',
-                width: '100%',
-                height: 80,
-                borderRadius: 10,
-                overflow: 'hidden',
-                background: '#0F172A',
-                border: '1px solid #E2E8F0'
-              }}
-            >
-              <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%)' }} />
-              <div style={{ position: 'absolute', bottom: 8, left: 12, fontSize: 13, fontWeight: 800, color: '#FFF' }}>
-                {initialEventName || 'Your Event Name'}
+
+            {/* Exactly replicates Flutter User App Card */}
+            {type === 'scheme' ? (
+              // Mobile Scheme Card: 304 x 171 (16:9)
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  aspectRatio: '16 / 9',
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  background: '#0F172A',
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.08)'
+                }}
+              >
+                <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {/* 108px dark gradient scrim */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 65%)' }} />
+                {/* Top-left badge */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    left: 12,
+                    background: '#16A34A',
+                    color: '#FFF',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {category || 'ELIGIBLE'}
+                </div>
+                {/* Bottom title & benefit info */}
+                <div style={{ position: 'absolute', bottom: 10, left: 12, right: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#FFF', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {initialEventName || 'Your Scheme Title'}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
+                    Ministry of Development • Direct Benefit
+                  </div>
+                </div>
               </div>
+            ) : (
+              // Mobile Event Card: 304 x 142 (2.14:1)
+              <div>
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: '304 / 142',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    background: '#0F172A',
+                    border: '1px solid #E2E8F0',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.08)'
+                  }}
+                >
+                  <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {/* Top-left Free Pass / Price Badge */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      left: 10,
+                      height: 20,
+                      padding: '0 8px',
+                      background: 'rgba(12, 6, 20, 0.55)',
+                      borderRadius: 10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: '#FEFEFE',
+                      fontSize: 9.5,
+                      fontWeight: 700,
+                      letterSpacing: '0.03em'
+                    }}
+                  >
+                    {ticketPrice && ticketPrice.trim() ? ticketPrice : 'FREE PASS'}
+                  </div>
+
+                  {/* Top-right bookmark button */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      background: 'rgba(12, 6, 20, 0.45)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#FFF'
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                  </div>
+                </div>
+
+                {/* Event Name Below Card (Matches knotnex_hub_screen.dart) */}
+                <div style={{ marginTop: 8, padding: '0 2px' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {initialEventName || 'Your Event Name'}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
+                    Sun, Nov 15 • 10:00 AM • Main Auditorium
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginTop: 10, fontSize: 10.5, color: '#94A3B8', textAlign: 'center' }}>
+              ✓ 100% matched to KnotNex User App mobile rendering
             </div>
           </div>
         )}
       </div>
 
-      {/* 3. Bottom Action Bar (Content in Center Removed) */}
+      {/* 3. Bottom Action Bar */}
       <div
         style={{
           height: 60,
@@ -693,8 +863,6 @@ export default function CoverCropScreen({ imageSrc, initialEventName, onApply, o
             fontWeight: 600,
             cursor: 'pointer'
           }}
-          onMouseEnter={e => e.currentTarget.style.color = '#1E1B4B'}
-          onMouseLeave={e => e.currentTarget.style.color = '#64748B'}
         >
           Cancel
         </button>

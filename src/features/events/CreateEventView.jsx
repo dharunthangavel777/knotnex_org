@@ -727,7 +727,7 @@ export default function CreateEventView({
     );
   }
 
-  // Dedicated Cover Crop Screen (Inside Sidebar & App Bar)
+  // Dedicated Cover Crop Screen (Standardized to KnotNex User App mobile aspect ratios)
   if (showCropScreen && originalCoverImage) {
     return (
       <CoverCropScreen
@@ -736,6 +736,8 @@ export default function CreateEventView({
         onApply={handleApplyCrop}
         onCancel={() => setShowCropScreen(false)}
         onUploadNew={handleCoverUpload}
+        type="event"
+        ticketPrice={ticketPrice}
       />
     );
   }

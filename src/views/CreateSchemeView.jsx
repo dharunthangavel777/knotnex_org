@@ -292,6 +292,7 @@ export default function CreateSchemeView() {
               (About description, banner URL, portal link, helpline, email)
              ======================================================== */}
           <SchemePortalSupportForm
+            title={title}
             desc={desc}
             setDesc={setDesc}
             bannerUrl={bannerUrl}
